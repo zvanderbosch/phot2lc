@@ -9,6 +9,7 @@ Much of the inspiration for this program came from the [WQED light curve extract
 ```bash
 $ pip install phot2lc
 ```
+[PyPI URL](https://pypi.org/project/phot2lc/)
 
 ### Main Features
 * Comparison star selection
