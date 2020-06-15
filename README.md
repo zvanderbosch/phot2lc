@@ -2,6 +2,10 @@
 
 A pure-Python interactive tool for extracting light curves from time series photometric data.
 
+**DISCLAIMER: phot2lc is still in alpha development stages. It is not yet recommended to use this tool for scientifically publishable light curves
+
+<span style="color:blue">some *This is Blue italic.* text</span>
+
 Much of the inspiration for this program came from the [WQED light curve extraction software](https://ui.adsabs.harvard.edu/abs/2013ascl.soft04004T/abstract), but **phot2lc** includes several new features and the ease of installation that comes with pure-Python programs.
 
 **phot2lc** can be installed with:
