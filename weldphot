@@ -1,0 +1,102 @@
+#!/usr/bin/env python
+
+import os
+import sys
+import copy
+import numpy as np
+import pandas as pd
+from glob import glob
+import argparse
+
+"""
+A python version of the WQED Weld function for use
+with the output from phot2lc.py
+
+Author:
+    Zach Vanderbosch
+"""
+
+# Generate arguments for command line parsing
+parser = argparse.ArgumentParser(description='Provide Input & Output Filenames.')
+parser.add_argument('-f', '--infiles',type=str,nargs='*',
+                    help="Input files.")
+parser.add_argument('-o', '--outfile',type=str,
+                    help="Output filename.")
+args = parser.parse_args()
+
+# Get list of filenames
+filenames = glob(args.infiles)
+Nf = len(filenames)
+if Nf == 0:
+    print('\n0 Input Files provided, weldlc cannot proceed.')
+    print('Program exited.\n')
+    sys.exit(1)
+elif Nf == 1:
+    print('\nOnly 1 Input File provided, weldlc cannot proceed.')
+    print('Program exited.\n')
+    sys.exit(1)
+else:
+  print('\nWelding {} Files:'.format(Nf))
+
+
+# Get the BJDs of T0 from header
+headers = []
+bjds = []
+for f in filenames:
+    print("  {}".format(f))
+    header = pd.read_csv(f,header=None,nrows=23,dtype=str,sep='?').values
+    headers.append(header)
+
+    # Grab Info From the Header
+    bjd = float(header[11][0].split(":")[1].split("#")[0].strip())
+    bjds.append(bjd)
+
+
+# Now Get all of the actual data
+tdata = []  # Combined time data in BJD days
+fdata = []
+nrows = 0
+for i,f in enumerate(filenames):
+    data = np.loadtxt(f)
+    tdata.append(data[:,0]/86400.0 + bjds[i])
+    fdata.append(data[:,1:])
+    nrows += len(data[:,0])
+
+# Reformat tdata and fdata into concatenated numpy arrays
+tdata = np.reshape(np.concatenate((tdata)),(nrows,1))
+fdata = np.vstack((fdata))
+all_data = np.concatenate((tdata,fdata),axis=1)
+nrows = np.shape(fdata)[1]
+output = copy.deepcopy((all_data[all_data[:,0].argsort()]))
+
+# Convert times in seconds to reference the minimum BJD
+bjdref = min(bjds)
+output[:,0] = (output[:,0] - bjdref) * 86400.0
+
+# Get date of bjdref
+bjd_start = Time(bjdref,format='jd',scale='tdb')
+date_start = bjd_start.to_value('isot').split("T")[0] 
+
+
+# Create new header for output
+lc_header = 'Welded Light curve for: {}'.format(names[0]) + \
+            '\nEmpty:' + \
+            '\nBJD_TDB of t_0: {:17.9f}'.format(refbjd) + \
+            '\nOptimal Aperture Radius: {}'.format(3.5) + \
+            '\nColumns: Mid-Exposure Time (s), Normalized Flux'
+
+# Save the lightcurve to file
+lc_format = '%11.3f  ' + '%i  '*nrows
+lc_fname = args.outfile
+np.savetxt(lc_fname, output, fmt=lc_format, header=lc_header)
+
+
+
+
+
+
+
+
+
+
+

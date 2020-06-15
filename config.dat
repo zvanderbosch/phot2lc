@@ -1,0 +1,8 @@
+author            = Zach Vanderbosch
+image_list_name   = olist
+pixloc_name       = phot_coords.orig
+stardat_location  = /Users/zvander/.wet/stars.dat
+default_telescope = mcd2
+default_source    = hsp
+default_image     = None
+default_object    = None

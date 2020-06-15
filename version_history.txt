@@ -1,0 +1,162 @@
+Version 0.1.0 - All Versions before 2020-06-01
+----------------------------------------------
+> Created phot2lc.py as a python replacement for
+  WQED. Included just the basic functionality
+  to work with output from Antonio Kanaan's
+  IRAF hsp_nd and data from McDonald Observatory.
+
+Version 1.0.0 - 2020-06-01
+--------------------------
+> Created the teledat.py and photfunc.py scripts
+   -teledat.py stores information related to each 
+      telescope and has a unique 4-letter code
+      associated with each one. This script is
+      similar in purpose to the file whiff.dat
+      for WQED.
+   -photfunc.py stores several functions used
+      within the main script below. This was
+      created just to help clean things up.
+> Included functionality that allows phot2lc
+    to be used with output from both hsp_nd and
+    Maestro. For Maestro, only the "counts" files
+    can currently be used.
+> Improved the formatting for the .lc and .phot
+    output files. The headers are now more easily
+    readable and contain more information. There
+    are also two time columns now, one for the raw
+    uncorrected times, and one for the barycentric
+    corrected times.
+
+Version 1.1.0 - 2020-06-04
+--------------------------
+> Created a new function in photfunc.py, get_loc, 
+    which gets the Astropy Earth Locations for each 
+    telescope available in the teledat.py file
+> Added LCOGT 1.0m telescopes to teledat.py with 
+    codename 'lco1'
+> Fixed bug related to object names. If object name
+    taken from the FITS header has any spaces in it,
+    those spaces will now be automatically removed, 
+    since the object names in stars.dat cannot have 
+    spaces.
+> Removed plot that shows the size of apertures and
+    sky annuli around each object. Too many issues, 
+    and not a very useful plot.
+> Fixed bug in get_time function. Times were being 
+    improperly re-formatted when DATE-OBS was already 
+    in ISO or ISOT in the FITS header. Now, these 
+    times are fed directly into an Astropy Time object 
+    which can auto-interpret the format.
+
+Version 1.2.0 - 2020-06-09
+--------------------------
+> Added a new command line input parameter for
+    providing the object name. Originally the object
+    name was grabbed solely from the FITS header, but
+    not all FITS files will have an object entry. The
+    object name is required, however, for grabbing the
+    corresping RA and Dec from the star.dat file.
+    Judi Provencal recommended adding a command line
+    option. The new command line option is -o, or 
+    --object. By default this option is set to None,
+    in which case the header is used.
+> Changed activation and deactivation functionality 
+    of the Garbage and Zoom rectangle selectors. 
+    Originally, once activated with the "g" or "z" 
+    input keys, they would remain active until 
+    deactivated using the same input keys. This would
+    lead to some confusion during use, as it was often 
+    easy to forget one selector was activated which 
+    then blocked activation of the other selector. 
+    Now, each selector is automatically deactivated 
+    after use, though it can still be manually 
+    deactivated if, once a user activates it, they 
+    realize they don't want to use it.
+> Added a Reverse Garbage Selector which, when you 
+    draw a box, will delete all of the points OUTSIDE 
+    of the box rather than inside the box. This 
+    feature can be activated and deactivated using 
+    the "r" keyboard input.
+
+
+Version 1.3.0 - 2020-06-12
+--------------------------
+> Added a sigma clipping function. This feature can
+    be used with the "x" key. User will be prompted
+    for their choice of lower and upper sigma 
+    rejection thresholds. The user can also choose
+    the window size, i.e. how many points are
+    considered at a time when rejecting data points.
+    Smaller windows are useful when dealing with
+    stars that are variable on short timescales. The
+    default window size is 25 data points.
+> Changed periodogram calculation/plot so that it
+    only goes out to 10,000 uHz, for easier viewing.
+> Added "#!/usr/bin/env python" to script so it can
+    be executed on the command line without having
+    to invoke Python beforehand.
+> Also removed .py extension on phot2lc so it looks
+    more like a regular executable.
+> Removed version history from phot2lc script, it now
+    lives only in this text file.
+> Cleaned up the inputs. Deleted some unused modules
+    and reorganized the rest. Now checks to make sure
+    the python version is 3.6 or later.
+> Added a new configuration script, a convenience 
+    function which new users can use to set the
+    defaults. This was needed in order to prevent
+    users from having to go into the code and manually
+    change hard-coded variables in order to make
+    phot2lc work. Now, the "photconfig" function can 
+    be called which edits the config.dat file, which
+    is then loaded into phot2lc during initialization.
+
+Version 1.3.1 to 1.3.4 - 2020-06-13
+-----------------------------------
+> Made phot2lc into a python package available on PyPI
+> Fixed bugs so that phot2lc and photconfig work
+    properly once they have been pip installed
+
+
+
+Version 1.4.0 - 2020-06-14
+--------------------------
+> Removed some extraneous print commands.
+> Changed the light curve and photometry header
+    descriptions for DATE, UTC, MJD, and BJED to be
+    more descriptive.
+> Finally got the weldlc functions working again with 
+    the new .lc output formats. wildly can be used now 
+    to stitch .lc files together for multi-night or
+    multi-site data sets.
+
+
+
+Version 1.4.1 - 2020-06-14
+--------------------------
+> Small changes to the PyPI README.md file
+
+
+Version 1.4.2 - 2020-06-14
+--------------------------
+> config.dat didn't get uploaded with the previous
+    version due to an error in setup.py. Fixed the
+    error and this version appears fully functional.
+
+Version 1.4.3 - 2020-06-14
+--------------------------
+> Forgot to include the most up-to-date version of
+    this file (version_history.txt) with the last
+    one. Now it should be complete.
+
+
+
+
+
+
+
+
+
+
+
+
