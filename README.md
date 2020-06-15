@@ -9,9 +9,6 @@ Much of the inspiration for this program came from the [WQED light curve extract
 ```bash
 $ pip install phot2lc
 ```
-[phot2lc on PyPI](https://pypi.org/project/phot2lc/)
-
-
 [![PyPI](https://img.shields.io/pypi/v/phot2lc.svg)](https://pypi.org/project/phot2lc/)
 
 ### Main Features
