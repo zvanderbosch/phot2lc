@@ -11,10 +11,8 @@ $ pip install phot2lc
 ```
 [phot2lc on PyPI](https://pypi.org/project/phot2lc/)
 
-|pypi-badge|
 
-.. |pypi-badge| image:: https://img.shields.io/pypi/v/lightkurve.svg
-                        :target: https://pypi.python.org/pypi/lightkurve
+[![PyPI](https://img.shields.io/pypi/v/lightkurve.svg)](https://pypi.python.org/pypi/lightkurve)
 
 ### Main Features
 * Comparison star selection
