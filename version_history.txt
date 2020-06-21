@@ -149,14 +149,47 @@ Version 1.4.3 - 2020-06-14
     this file (version_history.txt) with the last
     one. Now it should be complete.
 
+Version 1.4.4 - 2020-06-15
+--------------------------
+> A few small bug fixes.
+> Fixed an indexing error related to the grid search.
+    The wrong index was being used to save information
+    into the output .phot files related to the optimal 
+    aperture being used when using "G" to save the
+    final light curve. This has been fixed in this
+    version.
+    
+
+Version 1.4.5 - 2020-06-21
+--------------------------
+> Changed weldlc output to include both time columns
+    present in the original .lc files (Raw T-mid and
+    BaryCorr T-mid). This way, the column format does
+    not change between original and welded light curves.
 
 
+Version 1.4.6 - 2020-06-21
+--------------------------
+> Fixed small bugs.
 
 
-
-
-
-
-
+Version 1.5.0 - 2020-06-21
+--------------------------
+> Found and fixed a significant issue related to the 
+    calculation of the Barycentric Julian Date (BJD) at 
+    the start of the exposure sequence which gets saved
+    as the header keyword BJED in the .lc and .phot files. 
+    The BJD should have have been referencing the very
+    first image, regardless of whether the first data point
+    got removed from the final light curve. Instead, it was
+    referencing the first non-deleted data point. The 
+    barycentric corrected timestamps were shifted to
+    reference this time, so the timings from previous versions
+    won't be incorrect, but the raw timings were not shifted
+    to reference this time, so large discrepancies could
+    sometimes be seen when comparing the raw and barycorr
+    time columns. This has been fixed so that the BJED
+    keyword now always references the first image of a run,
+    and both time columns now reference the same BJED.
 
 

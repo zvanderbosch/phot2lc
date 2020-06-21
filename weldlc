@@ -57,35 +57,39 @@ for f in filenames:
 
 
 # Now get all of the actual data
-tdata = np.asarray([])  # Combined time data in BJD days
+t1data = np.asarray([])  # Array for raw mid-exposure times
+t2data = np.asarray([])  # Array for barycentric corrected mid-exposure times
 fdata = np.asarray([])
 edata = np.asarray([])
 for i,f in enumerate(filenames):
     data = np.loadtxt(f)
-    tdata = np.concatenate((tdata,(data[:,1]/86400.0) + bjds[i]))
+    t1data = np.concatenate((t1data,(data[:,0]/86400.0) + bjds[i]))
+    t2data = np.concatenate((t2data,(data[:,1]/86400.0) + bjds[i]))
     fdata = np.concatenate((fdata,data[:,2]))
     edata = np.concatenate((edata,data[:,3]))
 
 # Convert times in seconds to reference the minimum BJD
 bjdref = min(bjds)
-tref = (tdata - bjdref) * 86400.0
+t1ref = (t1data - bjdref) * 86400.0
+t2ref = (t2data - bjdref) * 86400.0
 
 # Get date of bjdref
 bjd_start = Time(bjdref,format='jd',scale='tdb')
 date_start = bjd_start.to_value('isot').split("T")[0] 
 
 # Resort and Reshape Arrays
-Nv = len(tdata)
-ind_sort = np.argsort(tref)
-tsorted = np.reshape(tref[ind_sort],(Nv,1))
+Nv = len(t1data)
+ind_sort = np.argsort(t1ref)
+t1sorted = np.reshape(t1ref[ind_sort],(Nv,1))
+t2sorted = np.reshape(t2ref[ind_sort],(Nv,1))
 fsorted = np.reshape(fdata[ind_sort],(Nv,1))
 esorted = np.reshape(edata[ind_sort],(Nv,1))
 
 # Calculate the time sapn in days
-tspan = (tsorted[-1,0] - tsorted[0,0])/86400.
+tspan = (t2sorted[-1,0] - t2sorted[0,0])/86400.
 
 # Recombine into an output file
-output = np.concatenate((tsorted,fsorted,esorted),axis=1)
+output = np.concatenate((t1sorted,t2sorted,fsorted,esorted),axis=1)
 
 # Create new header for output
 lc_header = '{}'.format(headers[0][0][0].strip("# ")) + \
@@ -94,13 +98,13 @@ lc_header = '{}'.format(headers[0][0][0].strip("# ")) + \
             '\nDate       : {:30s}# Mid-Exposure TDB Date at T0'.format(date_start) + \
             '\nBJED       : {:<30.9f}# Mid-Exposure TDB JD at T0'.format(bjdref) + \
             '\nWeldNum    : {:<30d}# Number of files welded'.format(Nf) + \
-            '\nNpoints    : {:<30d}# Number of data points'.format(len(tsorted)) + \
+            '\nNpoints    : {:<30d}# Number of data points'.format(len(t1sorted)) + \
             '\nTspan      : {:<30.8f}# Time spanned by data (days)'.format(tspan) + \
             '\nWeldDate   : {:30s}# File creation date'.format(Time.now().to_value("iso")) + \
-            '\nColumns: BaryCorr T-mid (s), Rel. Flux, Rel. Flux Error' 
+            '\nColumns: Raw T-mid (s), BaryCorr T-mid (s), Rel. Flux, Rel. Flux Error' 
 
 # Save the lightcurve to file
-lc_format = '%15.3f  %9.6f  %9.6f'
+lc_format = '%15.3f  %15.3f  %9.6f  %9.6f'
 lc_fname = args.outfile
 np.savetxt(lc_fname, output, fmt=lc_format, header=lc_header)
 

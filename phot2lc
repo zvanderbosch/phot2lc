@@ -374,7 +374,7 @@ if not log_exists:
         time_stamps = np.loadtxt(phot_names[0])[:,0]*86400.
     elif psource == 'hsp':
         if num_fits == 1:
-            time_stamps = np.arange(len(Ndat),dtype=float)*texp
+            time_stamps = np.arange(Ndat,dtype=float)*texp
         else:
             ## Create list to store the relative time differences
             time_stamps = np.zeros(num_fits)
@@ -1479,18 +1479,18 @@ de_string = tcoord.to_string('hmsdms',sep=" ")[12:]
 
 # Calculate BJD times using Astropy Time & TimeDelta objects
 print('\nCalculating barycentric corrections...')
-tkeep = time_stamps[keep_ind]
-st = dt_zero_mid.to_value('isot')        # Mid Exposure start date/time
-st_mjd = dt_zero_mid.to_value('mjd')     # Mid Exposure start MJD
-print('BJD Mid-Exposure Start Time = {}'.format(st))
-t0 = Time(st,scale='utc',format='isot',location=loc)  # Astropy mid-exposure Start time
-td = TimeDelta(tkeep,format='sec')       # Time deltas for kept points
-t = t0 + td                              # Full list of Astropy mid-exposure times
-ltt_bary = t.light_travel_time(tcoord)   # Light travel time to barycenter
-tbjd = t.tdb.jd + ltt_bary.jd            # Barycentric times (rescaled UTC + LTT)
-tbjd_sec = (tbjd - tbjd[0]) * 86400.0    # BJD converted to seconds since reftime
-bjdref = tbjd[0]                         # BJD of T0 for all timestamps
-
+tkeep = time_stamps[keep_ind]              # All kept timestamps
+st = dt_zero_mid.to_value('isot')          # UTC date-time at mid-exposure T0
+st_mjd = dt_zero_mid.to_value('mjd')       # UTC MJD at mid-exposure T0
+t0 = Time(st,scale='utc',format='isot',    # Astropy mid-exposure Start time
+          location=loc)                    
+td = TimeDelta(tkeep,format='sec')         # Time deltas for kept points
+t = t0 + td                                # Full list of Astropy mid-exposure times
+ltt_bary_t0 = t0.light_travel_time(tcoord) # Light travel time to barycenter for T0
+ltt_bary = t.light_travel_time(tcoord)     # Light travel time to barycenter for all kept times
+tbjd = t.tdb.jd + ltt_bary.jd              # Barycentric times (rescaled UTC + LTT)
+bjdref = t0.tdb.jd + ltt_bary_t0           # BJD at mid-exposure T0
+tbjd_sec = (tbjd - bjdref.value) * 86400.0 # BJD converted to seconds since reftime
 
 # Function to Calculate Error Bars and S/N
 def calc_err(phot,aper):
@@ -1537,12 +1537,12 @@ if save_user:
     snr,_ = calc_err(phot_data[ind_ppmin].iloc[keep_ind,:].values,opt_ap)
     err = 1./snr
 else:
-    opt_ind = ind_comb_min
+    opt_ind = ind_aper[ind_comb_min]
     opt_ap = apmin_auto
     comp_number = len(all_combs[ind_comb_min])
     comp_ids = comp_str2
     opt_pp = pp_comb[ind_comb_min]
-    snr,_ = calc_err(phot_data[ind_comb_min].iloc[keep_ind,:].values,opt_ap)
+    snr,_ = calc_err(phot_data[ind_aper[ind_comb_min]].iloc[keep_ind,:].values,opt_ap)
     err = 1./snr
 
 # Header for the raw photometry file
@@ -1557,7 +1557,7 @@ rawphot_header = 'Object     : {:30s}# Name of Object'.format(obj_name) + \
     '\nMJD        : {:<30.9f}# Mid Exposure MJD Start'.format(st_mjd) + \
     '\nExptime    : {:<30.6f}# Exposure Time (s)'.format(texp) + \
     '\nFilter     : {:30s}# Filter Name'.format(filter_name) + \
-    '\nBJED       : {:<30.9f}# Mid Exp. Barycentric Julian Date'.format(bjdref) + \
+    '\nBJED       : {:<30.9f}# Mid Exp. Barycentric Julian Date'.format(bjdref.value) + \
     '\nApPhot     : {:30s}# Photometry Program'.format(source_dict[psource]) + \
     '\nOrigFile   : {:30s}# Source Photometry Filename'.format(phot_names[opt_ind]) + \
     '\nApRadius   : {:<30.2f}# Aperture Radius (pixels)'.format(opt_ap) + \
@@ -1577,7 +1577,7 @@ lcfin_header = 'Object     : {:30s}# Name of Object'.format(obj_name) + \
     '\nMJD        : {:<30.9f}# Mid-Exposure UTC MJD at T0'.format(st_mjd) + \
     '\nExptime    : {:<30.6f}# Exposure Time (s)'.format(texp) + \
     '\nFilter     : {:30s}# Filter Name'.format(filter_name) + \
-    '\nBJED       : {:<30.9f}# Mid-Exposure TDB JD at T0'.format(bjdref) + \
+    '\nBJED       : {:<30.9f}# Mid-Exposure TDB JD at T0'.format(bjdref.value) + \
     '\nApPhot     : {:30s}# Photometry Program'.format(source_dict[psource]) + \
     '\nOrigFile   : {:30s}# Source Photometry Filename'.format(phot_names[opt_ind]) + \
     '\nApRadius   : {:<30.2f}# Aperture Radius (pixels)'.format(opt_ap) + \
@@ -1608,22 +1608,22 @@ del_log[keep_ind] += 1 # Set to 1 for points which are kept (0 means deleted)
 lcerr_saved = np.reshape(err,(Ndat_keep,1))
 if save_user:
     if psource == 'hsp':
-        phot_saved = phot_data[ind_ppmin].iloc[keep_ind,:].values
+        phot_saved = phot_data[opt_ind].iloc[keep_ind,:].values
         output_phot = np.concatenate((rawtimes_saved,bjdtimes_saved,phot_saved),axis=1)
     elif psource == 'mae':
-        phot_saved = phot_data[ind_ppmin].iloc[keep_ind,0:2*Nobj-1:2].values
-        sky_saved = np.reshape(phot_data[ind_ppmin].iloc[keep_ind,1].values,(Ndat_keep,1))
+        phot_saved = phot_data[opt_ind].iloc[keep_ind,0:2*Nobj-1:2].values
+        sky_saved = np.reshape(phot_data[opt_ind].iloc[keep_ind,1].values,(Ndat_keep,1))
         output_phot = np.concatenate((rawtimes_saved,bjdtimes_saved,phot_saved,sky_saved),axis=1)
     lc_saved = np.reshape(lc_all[ind_ppmin],(Ndat_keep,1))
     output_lc = np.concatenate((rawtimes_saved,bjdtimes_saved,lc_saved,lcerr_saved),axis=1)
     output_log = np.concatenate((orig_times_logged,del_log),axis=1)
 else:
     if psource == 'hsp':
-        phot_saved = phot_data[ind_comb_min].iloc[keep_ind,:].values
+        phot_saved = phot_data[opt_ind].iloc[keep_ind,:].values
         output_phot = np.concatenate((rawtimes_saved,bjdtimes_saved,phot_saved),axis=1)
     elif psource == 'mae':
-        phot_saved = phot_data[ind_comb_min].iloc[keep_ind,0:2*Nobj-1:2].values
-        sky_saved = np.reshape(phot_data[ind_comb_min].iloc[keep_ind,1].values,(Ndat_keep,1))
+        phot_saved = phot_data[opt_ind].iloc[keep_ind,0:2*Nobj-1:2].values
+        sky_saved = np.reshape(phot_data[opt_ind].iloc[keep_ind,1].values,(Ndat_keep,1))
         output_phot = np.concatenate((rawtimes_saved,bjdtimes_saved,phot_saved,sky_saved),axis=1)
     lc_saved = np.reshape(lc_comb[ind_comb_min],(Ndat_keep,1))
     output_lc = np.concatenate((rawtimes_saved,bjdtimes_saved,lc_saved,lcerr_saved),axis=1)
