@@ -193,3 +193,13 @@ Version 1.5.0 - 2020-06-21
     and both time columns now reference the same BJED.
 
 
+Version 1.5.1 - 2020-06-25
+--------------------------
+> Fixed bug related to improper exposure time format. The
+    "get_time" function within photfunc.py assumed that
+    FITS header's exposure time value was a float, but
+    occasionally it would be a different format. This
+    resulted in errors within phot2lc when doing float
+    arithmetic on the exposure time parameter. Now, the
+    get_time function will convert the exposure time to
+    type float upon loading it from the header.

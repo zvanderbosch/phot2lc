@@ -1,10 +1,14 @@
 import os
 import sys
 import numpy as np
+from copy import deepcopy
+from scipy.signal import find_peaks
 from astropy.io import fits
 from astropy.time import Time
 from astropy.coordinates import EarthLocation
 from astropy.timeseries import LombScargle as ls
+import lmfit as lmf
+from lmfit import Model
 
 
 """
@@ -80,7 +84,7 @@ def get_time(fname,tdict):
     if (dformat == 0) & (tformat == 0): 
         date_obs = hdr[tdict['date']] # Must be YYYY MM DD, any separator works
         time_obs = hdr[tdict['time']] # Must be hh mm ss, any separator works
-        t_exp = hdr[tdict['texp']] # Must be in seconds
+        t_exp = float(hdr[tdict['texp']]) # Must be in seconds
 
         # Convert to ISOT format for Astropy Time
         isot_time = "{}-{}-{}T{}:{}:{}".format(date_obs[0:4],date_obs[5:7],
@@ -90,7 +94,7 @@ def get_time(fname,tdict):
         
     elif (dformat == 1) & (tformat == 1):
         dt_obs = hdr[tdict['date']] # Must be ISO or ISOT format, any separator works
-        t_exp = hdr[tdict['texp']] # Must be in seconds
+        t_exp = float(hdr[tdict['texp']]) # Must be in seconds
         
         # Convert to ISOT format for Astropy Time
         time = Time(dt_obs,scale='utc')
@@ -100,7 +104,7 @@ def get_time(fname,tdict):
 
         # Convert to ISOT format for Astropy Time
         time = Time(jd_obs,scale='utc',format='jd')
-        t_exp = hdr[tdict['texp']] # Must be in seconds
+        t_exp = float(hdr[tdict['texp']]) # Must be in seconds
 
     return time,t_exp
 
@@ -205,8 +209,8 @@ def calc_lsp(time,flux):
     fnyq = 0.5/medtexp
 
     # For easier viewing, limit Nyquist frequency to 10,000 uHz
-    if fnyq > 0.01:
-        fnyq = 0.01
+    if fnyq > 0.012:
+        fnyq = 0.012
 
     # Define the frequency array
     freq_arr = np.arange(deltaf,fnyq,deltaf)
@@ -299,6 +303,134 @@ def reconfig():
 
     print('')
     return
+
+
+
+
+
+
+############################################################
+## Define Functions for FITLC's pre-whitening sequence
+
+# Sinusoidal Function
+def sine(x,freq,amp,phase):
+    return amp*np.sin(2.0*np.pi*(freq*x + phase))
+
+# A simple constant offset
+def offset(x,offset):
+    return offset
+
+# Function used to generate a multi-term sinusoidal function
+def make_sine_func(nterms):
+    if nterms < 1:
+        print('Cannot generate function with Zero terms.')
+        sys.exit(1)
+
+    for i in range(nterms):
+        prefix = "s{}_".format(i+1)
+        if i == 0:
+            m = Model(offset) + Model(sine, prefix=prefix)
+        else:
+            m += Model(sine, prefix=prefix)
+    return m
+
+
+# The main pre-whitening function
+def prewhiten(time,flux,Npw=10):
+
+    # Get time sampling and duration
+    texp = np.median(time[1:] - time[:-1])
+    delt = time[-1] - time[0]
+
+    # Calculate the raw Periodogram
+    farr,lsp_raw = calc_lsp(time,flux)
+    raw_threshold = 4.0*np.mean(lsp_raw[(farr>0.0001) & (farr<0.01)])
+
+    # Define the peak search limits (in frequency units)
+    pmin = 0.0003
+    pmax = 1.
+
+    flux_fit = np.copy(flux)  # Make a copy of flux which will be pre-whitened
+    old_names = []
+    for i in range(Npw+1):
+
+        # Calculate Lomb-Scargle Periodogram (LSP)
+        farr,lsp = calc_lsp(time,flux_fit)
+        threshold = 4.0*np.mean(lsp[(farr>0.001) & (farr<0.01)])
+
+        # Find the highest peak
+        peaks,props = find_peaks(lsp,height=threshold)
+        if len(peaks) > 0:
+            choose_peaks = [p for p,f in zip(peaks,farr[peaks]) 
+                            if (f > pmin) & (f < pmax)]
+            choose_heights = [h for h,f in zip(props['peak_heights'],farr[peaks]) 
+                              if (f > pmin) & (f < pmax)]
+            if len(choose_peaks) == 0:
+                if i == 0:
+                    peaks_found = False
+                    break
+                else:
+                    break
+            max_height = max(choose_heights)
+            max_idx = np.where(choose_heights == max_height)[0][0]
+            max_freq = farr[choose_peaks][max_idx]
+        else:
+            if i == 0:
+                peaks_found = False
+                break
+            else:
+                break
+
+        # Generate the model and parameters
+        peaks_found = True
+        mod = make_sine_func(i+1)
+        par = mod.make_params()
+
+        # Set initial guesses and limits for parameters for
+        # a linear lieast squares fit (i.e. fix the frequencies)
+        # This will provide a better intial guess for the phases.
+        for name,_ in par.items():
+            if name in old_names:
+                par[name].value = par_old[name].value
+                if 'freq' in name:
+                    par[name].vary = False
+            else:
+                if 'off' in name:
+                    par[name].value = 0.0
+                if 'freq' in name:
+                    par[name].value = max_freq
+                    par[name].vary = False
+                if 'amp' in name:
+                    par[name].value = max_height
+                if 'pha' in name:
+                    par[name].value = 0.0
+
+        # Perform the linear LSQ fit
+        result = mod.fit(flux, params=par, x=time)
+
+        # Now unfix the frequencies
+        new_par = result.params
+        for name,_ in new_par.items():
+            if 'freq' in name:
+                new_par[name].vary = True
+
+        # Perform the non-linear LSQ fit
+        result = mod.fit(flux, params=new_par, x=time)
+
+        # Save the new parameters and parameter names for next iteration
+        par_old = deepcopy(result.params)
+        old_names = [x for x,_ in par_old.items()]
+
+        # Pre-Whiten the Light Curve
+        flux_fit = np.copy(flux) - result.best_fit
+
+
+    # Return fit result or None
+    if peaks_found:
+        return result,threshold
+    else:
+        return None,raw_threshold
+
 
 
 
