@@ -13,7 +13,7 @@ $ pip install phot2lc
 ```
 [![PyPI](https://img.shields.io/pypi/v/phot2lc.svg)](https://pypi.org/project/phot2lc/)
 
-Documentation for **phot2lc** can be found at [phot2lc.readthedocs.io](phot2lc.readthedocs.io)
+Documentation for **phot2lc** can be found at [phot2lc.readthedocs.io](https://phot2lc.readthedocs.io/en/latest/)
 
 ### Main Features
 * Comparison star selection
