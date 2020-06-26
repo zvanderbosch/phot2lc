@@ -22,7 +22,7 @@ copyright = '2020, Zach Vanderbosch'
 author = 'Zach Vanderbosch'
 
 # The full version, including alpha/beta/rc tags
-release = '1.4.4'
+release = '1.5.1'
 
 
 # -- General configuration ---------------------------------------------------
@@ -30,7 +30,7 @@ release = '1.4.4'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = [
+extensions = ['sphinx.ext.autosectionlabel'
 ]
 
 # Add any paths that contain templates here, relative to this directory.

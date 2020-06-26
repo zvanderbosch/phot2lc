@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>phot2lc &mdash; phot2lc 1.5.1 documentation</title>
+  <title>Quickstart &mdash; phot2lc 1.5.1 documentation</title>
   
 
   
@@ -35,7 +35,8 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Configuration" href="configuration.html" /> 
+    <link rel="next" title="License" href="license.html" />
+    <link rel="prev" title="Configuration" href="configuration.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -49,7 +50,7 @@
           
 
           
-            <a href="#" class="icon icon-home"> phot2lc
+            <a href="index.html" class="icon icon-home"> phot2lc
           
 
           
@@ -79,9 +80,13 @@
               
             
             
-              <ul>
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Quickstart</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#basic-usage">Basic Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#input-files">Input Files</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
 <li class="toctree-l1"><a class="reference internal" href="license.html#contact">Contact</a></li>
 <li class="toctree-l1"><a class="reference internal" href="help.html">Need Help</a></li>
@@ -99,7 +104,7 @@
       <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="#">phot2lc</a>
+          <a href="index.html">phot2lc</a>
         
       </nav>
 
@@ -128,15 +133,15 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="#">Docs</a> &raquo;</li>
+      <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>phot2lc</li>
+      <li>Quickstart</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/quickstart.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -149,45 +154,35 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="phot2lc">
-<h1>phot2lc<a class="headerlink" href="#phot2lc" title="Permalink to this headline">¶</a></h1>
-<p>phot2lc is a pure-Python interactive tool for extracting light curves from time-series photometric data.</p>
-<p>phot2lc is largely inspired by WQED (<a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2009JPhCS.172a2081T/abstract">Thompson &amp; Mullally 2009</a>, <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2013ascl.soft04004T/abstract">2013</a>), and is designed to work with the outputs from both MAESTRO (<a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2010AAS...21545209D/abstract">Dalessio 2010</a>, <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2013PhDT.......170D/abstract">2013</a>) and ccd_hsp (<a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2002A%26A...389..896K/abstract">Kanaan et al. 2002</a>).</p>
-</div>
-<div class="section" id="installation">
-<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
-<p>You can install phot2lc simply with pip:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install phot2lc
+  <div class="section" id="quickstart">
+<h1>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h1>
+<p>This quickstart guide assumes you have already performed aperture photometry using either IRAF's ccd_hsp or the Matlab-based MAESTRO software, and have already <a class="reference internal" href="configuration.html#configuration"><span class="std std-ref">configured phot2lc</span></a> to run properly on your machine.</p>
+<div class="section" id="basic-usage">
+<h2>Basic Usage<a class="headerlink" href="#basic-usage" title="Permalink to this headline">¶</a></h2>
+<p>phot2lc is a command line tool, and can be executed from the command line by simply typing</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>phot2lc
 </pre></div>
 </div>
-<p>The phot2lc project can also be found at <a class="reference external" href="https://github.com/zvanderbosch/phot2lc">GitHub</a> and at <a class="reference external" href="https://pypi.org/project/phot2lc/">PyPI</a>.</p>
+<p>phot2lc also has several command line arguments available which can be used individually, or all at once:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>-h --help      Show command line options
+-c --codes     Print a list of available telescope codes
+-t --telescope Code name for telescope used
+-s --source    Code name for photometry program used
+-i --image     Name of specific image instead of list
+-o --object    Name of object matching stars.dat entry
+</pre></div>
 </div>
-<div class="section" id="package-contents">
-<h1>Package Contents<a class="headerlink" href="#package-contents" title="Permalink to this headline">¶</a></h1>
+<p>If these command line options are used, they will override the defaults that are set within the config.dat file by the photconfig program.</p>
+</div>
+<div class="section" id="input-files">
+<h2>Input Files<a class="headerlink" href="#input-files" title="Permalink to this headline">¶</a></h2>
+<p>For ccd_hsp output, phot2lc will assume the photometry files have base names of <em>runbase</em> followed by the aperture size (e.g. runbase2.5), while for MAESTRO output the photometry files are assumed to have base names of <em>counts</em>, again followed by the aperture size (e.g. counts_02.5).</p>
+<p>In addition, the following files should be present:</p>
 <ul class="simple">
-<li><p><strong>phot2lc</strong> -- The main light curve extraction program</p></li>
-<li><p><strong>photconfig</strong> -- A program that configures some of phot2lc's defaults</p></li>
-<li><p><strong>weldlc</strong> -- A program that can weld together multiple light curve files into one</p></li>
+<li><p>stars.dat (or another file with object names and RA-Dec coordinates)</p></li>
+<li><p>The first FITS image (or all images within <strong>image_list_name</strong>)</p></li>
+<li><p>If available, the file pointed to by <strong>pixloc_name</strong></p></li>
 </ul>
-<div class="section" id="guide">
-<h2>Guide<a class="headerlink" href="#guide" title="Permalink to this headline">¶</a></h2>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="configuration.html#running-photconfig">Running photconfig</a></li>
-<li class="toctree-l2"><a class="reference internal" href="configuration.html#the-stars-dat-file">The stars.dat File</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="quickstart.html#basic-usage">Basic Usage</a></li>
-<li class="toctree-l2"><a class="reference internal" href="quickstart.html#input-files">Input Files</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
-<li class="toctree-l1"><a class="reference internal" href="license.html#contact">Contact</a></li>
-<li class="toctree-l1"><a class="reference internal" href="help.html">Need Help</a></li>
-</ul>
-</div>
 </div>
 </div>
 
@@ -199,8 +194,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="configuration.html" class="btn btn-neutral float-right" title="Configuration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="license.html" class="btn btn-neutral float-right" title="License" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
+      
+        <a href="configuration.html" class="btn btn-neutral float-left" title="Configuration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
