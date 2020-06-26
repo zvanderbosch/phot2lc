@@ -13,6 +13,8 @@ $ pip install phot2lc
 ```
 [![PyPI](https://img.shields.io/pypi/v/phot2lc.svg)](https://pypi.org/project/phot2lc/)
 
+Documentation for **phot2lc** can be found at [phot2lc.readthedocs.io](phot2lc.readthedocs.io)
+
 ### Main Features
 * Comparison star selection
 * Aperture size selection
