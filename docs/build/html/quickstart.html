@@ -85,6 +85,8 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Quickstart</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#basic-usage">Basic Usage</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#input-files">Input Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#startup">Startup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#commands">Commands</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
@@ -177,12 +179,63 @@
 <div class="section" id="input-files">
 <h2>Input Files<a class="headerlink" href="#input-files" title="Permalink to this headline">¶</a></h2>
 <p>For ccd_hsp output, phot2lc will assume the photometry files have base names of <em>runbase</em> followed by the aperture size (e.g. runbase2.5), while for MAESTRO output the photometry files are assumed to have base names of <em>counts</em>, again followed by the aperture size (e.g. counts_02.5).</p>
-<p>In addition, the following files should be present:</p>
+<p>In addition, the following files/info should be present:</p>
 <ul class="simple">
 <li><p>stars.dat (or another file with object names and RA-Dec coordinates)</p></li>
 <li><p>The first FITS image (or all images within <strong>image_list_name</strong>)</p></li>
 <li><p>If available, the file pointed to by <strong>pixloc_name</strong></p></li>
+<li><p>An entry within teledat.py corresponding to your telescope/instrument</p>
+<ul>
+<li><p>If need to add a new entry into teledat.py, you can do this yourself by editing the teledat.py file, or <a class="reference internal" href="license.html#contact"><span class="std std-ref">send a request to Zach Vanderbosch</span></a> to add your telescope into the official phot2lc package.</p></li>
 </ul>
+</li>
+</ul>
+</div>
+<div class="section" id="startup">
+<h2>Startup<a class="headerlink" href="#startup" title="Permalink to this headline">¶</a></h2>
+<p>Once you have started phot2lc and it successfully loads all the necessary files, the following windows will pop up:</p>
+<div class="figure align-center" id="id1">
+<a class="reference internal image-reference" href="_images/first_image.png"><img alt="First Image" src="_images/first_image.png" style="width: 500px;" /></a>
+<p class="caption"><span class="caption-text">Window displaying the first image. The target and comparison stars are marked if a <strong>pixloc_name</strong> file was provided, otherwise this will just be an unmarked image.</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+</div>
+<div class="figure align-center" id="id2">
+<a class="reference internal image-reference" href="_images/raw_photometry.png"><img alt="Raw Photometry" src="_images/raw_photometry.png" style="width: 500px;" /></a>
+<p class="caption"><span class="caption-text">Window displaying the raw photometry for target and comparison stars, along with the amount of sky subtracted from the target. The mean values are displayed to the right of each light curve.</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
+</div>
+<div class="figure align-center" id="id3">
+<a class="reference internal image-reference" href="_images/divided_lc.png"><img alt="Divided Light Curve" src="_images/divided_lc.png" style="width: 500px;" /></a>
+<p class="caption"><span class="caption-text">Window primarily displaying the divided light curve, but also displaying the summed comparison star flux (top right panel) and the polynomial being used to de-trend the light curve (top left panel).</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
+</div>
+</div>
+<div class="section" id="commands">
+<h2>Commands<a class="headerlink" href="#commands" title="Permalink to this headline">¶</a></h2>
+<p>After startup and once you have clicked within one of the windows, you can print out a full list of commands in your terminal by pressing &quot;?&quot;. The output will look like the following:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>COMMAND LIST - Divided Light Curve:
+  - Type &#39;?&#39; to re-print this list of commands.
+  - Type &#39;d&#39; to delete the point nearest the cursor.
+  - Type &#39;a&#39; to add back a deleted point.
+  - Type &#39;A&#39; to add back ALL deleted points.
+  - Type &#39;g&#39; to activate/deactivate garbage rectangle.
+  - Type &#39;r&#39; to activate/deactivate reverse garbage rectangle.
+  - Type &#39;z&#39; to activate/deactivate zoom rectangle.
+  - Type &#39;Z&#39; to restore zoom to original.
+  - Type &#39;x&#39; to perform sigma clipping.
+  - Type &#39;s&#39; to toggle the display of deleted points.
+  - Type &#39;f&#39; to choose the degree of polynomial fit.
+  - Type &#39;c&#39; to choose comparison stars for division.
+  - Type &#39;v&#39; to move to previous aperture size.
+  - Type &#39;w&#39; to move to next aperture size.
+  - Type &#39;Q&#39; to close plots and exit the program.
+  - Type &#39;W&#39; to close plots and continue without grid search.
+  - Type &#39;G&#39; to close plots and continue with grid search.
+
+COMMAND LIST - Aperture Selection:
+  - Type &#39;d&#39; to delete the point nearest the cursor.
+  - Type &#39;A&#39; to add back all deleted points.
+  - Type &#39;W&#39; to save lightcurve with *USER* Selection.
+  - Type &#39;G&#39; to save lightcurve with *GRID* Selection.
+</pre></div>
+</div>
 </div>
 </div>
 

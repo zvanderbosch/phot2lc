@@ -32,11 +32,15 @@ Input Files
 
 For ccd_hsp output, phot2lc will assume the photometry files have base names of *runbase* followed by the aperture size (e.g. runbase2.5), while for MAESTRO output the photometry files are assumed to have base names of *counts*, again followed by the aperture size (e.g. counts_02.5).
 
-In addition, the following files should be present:
+In addition, the following files/info should be present:
 
 * stars.dat (or another file with object names and RA-Dec coordinates)
 * The first FITS image (or all images within **image_list_name**)
 * If available, the file pointed to by **pixloc_name**
+* An entry within teledat.py corresponding to your telescope/instrument
+  
+  * If need to add a new entry into teledat.py, you can do this yourself by editing the teledat.py file, or :ref:`send a request to Zach Vanderbosch<Contact>` to add your telescope into the official phot2lc package.
+
 
 
 Startup
@@ -44,7 +48,60 @@ Startup
 
 Once you have started phot2lc and it successfully loads all the necessary files, the following windows will pop up:
 
+.. figure:: ./images/first_image.png
+  :width: 500
+  :align: center
+  :alt: First Image
+
+  Window displaying the first image. The target and comparison stars are marked if a **pixloc_name** file was provided, otherwise this will just be an unmarked image.
 
 
+.. figure:: ./images/raw_photometry.png
+  :width: 500
+  :align: center
+  :alt: Raw Photometry
+
+  Window displaying the raw photometry for target and comparison stars, along with the amount of sky subtracted from the target. The mean values are displayed to the right of each light curve.
+
+.. figure:: ./images/divided_lc.png
+  :width: 500
+  :align: center
+  :alt: Divided Light Curve
+
+  Window primarily displaying the divided light curve, but also displaying the summed comparison star flux (top right panel) and the polynomial being used to de-trend the light curve (top left panel).
 
 
+Commands
+--------
+
+After startup and once you have clicked within one of the windows, you can print out a full list of commands in your terminal by pressing "?". The output will look like the following:
+
+.. code-block:: text
+
+
+  COMMAND LIST - Divided Light Curve:
+    - Type '?' to re-print this list of commands.
+    - Type 'd' to delete the point nearest the cursor.
+    - Type 'a' to add back a deleted point.
+    - Type 'A' to add back ALL deleted points.
+    - Type 'g' to activate/deactivate garbage rectangle.
+    - Type 'r' to activate/deactivate reverse garbage rectangle.
+    - Type 'z' to activate/deactivate zoom rectangle.
+    - Type 'Z' to restore zoom to original.
+    - Type 'x' to perform sigma clipping.
+    - Type 's' to toggle the display of deleted points.
+    - Type 'f' to choose the degree of polynomial fit.
+    - Type 'c' to choose comparison stars for division.
+    - Type 'v' to move to previous aperture size.
+    - Type 'w' to move to next aperture size.
+    - Type 'Q' to close plots and exit the program.
+    - Type 'W' to close plots and continue without grid search.
+    - Type 'G' to close plots and continue with grid search.
+
+  COMMAND LIST - Aperture Selection:
+    - Type 'd' to delete the point nearest the cursor.
+    - Type 'A' to add back all deleted points.
+    - Type 'W' to save lightcurve with *USER* Selection.
+    - Type 'G' to save lightcurve with *GRID* Selection.
+
+The "Divided Light Curve" command list provides your options when you are working within the divided light curve window. Within the first image and raw photometry windows, the only commands available are "?", "Q", "W", and "G". The other command list for aperture selection is for the next window that appears if you decide to continue light curve extraction by typing the "W" or "G" keys when working in the divided light curve window.
