@@ -99,7 +99,34 @@ After startup and once you have clicked within one of the windows, you can print
     - Type 'G' to close plots and continue with grid search.
 
   COMMAND LIST - Aperture Selection:
+    - Type '?' to re-print this list of commands.
     - Type 'd' to delete the point nearest the cursor.
     - Type 'A' to add back all deleted points.
+    - Type 'Q' to close plots and exit the program.
     - Type 'W' to save lightcurve with *USER* Selection.
     - Type 'G' to save lightcurve with *GRID* Selection.
+
+The "Divided Light Curve" command list provides your options when you are working within the divided light curve window. Within the first image and raw photometry windows, the only commands available are "?", "Q", "W", and "G". The other command list for aperture selection is for the next window that appears if you decide to continue light curve extraction by typing the "W" or "G" keys when working in the divided light curve window.
+
+For more detailed explanations of each command, see the PDF version of the phot2lc user guide (coming soon!).
+
+
+Aperture Selection
+------------------
+
+Once you are satisfied with your selections in the divided light curve window and have chosen to continue by pressing the "W" or "G" key, a new window will appear showing the optimal light curve along with its periodogram. Also shown is a plot of average point-to-point (P2P) scatter as a function of aperture size. This is the criterion used to select the optimal light curve, that with the lowest P2P scatter.
+
+.. figure:: ./images/aperture_selection_user.png
+  :width: 500
+  :align: center
+  :alt: First Image
+
+  The optimal light curve and aperture selection from the USER selected comparison stars.
+
+
+.. figure:: ./images/aperture_selection_grid.png
+  :width: 500
+  :align: center
+  :alt: First Image
+
+  The optimal light curves and aperture selections from both the USER (white) and GRID (red) selected comparison stars.

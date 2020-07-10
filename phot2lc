@@ -27,6 +27,7 @@ Usage:
 
 Options:
     -h --help      Show command line options
+    -c --codes     Print a list of available telescope codes
     -t --telescope Code name for telescope used
     -s --source    Code name for photometry program used
     -i --image     Name of specific image instead of list
@@ -118,6 +119,8 @@ default_object = None if config_dat[7] == 'None' else config_dat[7]
 ## Generate arguments for command line parsing
 
 parser = argparse.ArgumentParser()
+parser.add_argument('-c', '--codes',action='store_true',
+                    help="If invoked, print list of available telescope codes.")
 parser.add_argument('-t', '--telescope',type=str,default=default_telescope,
                     help="Code name for telescope used.")
 parser.add_argument('-s', '--source',type=str,default=default_source,
@@ -139,6 +142,14 @@ telinfo = get_telinfo()
 valid_codes = [x['code'] for x in telinfo]
 valid_telescopes = [x['telename'] for x in telinfo]
 valid_instruments = [x['instname'] for x in telinfo]
+
+# Print out available codes if requested
+if args.codes:
+    print('\nSupported telescope codes:')
+    for code,tele,inst in zip(valid_codes,valid_telescopes,valid_instruments):
+        print("   {} = {} {}".format(code,tele,inst))
+    print("")
+    sys.exit(1)
 
 # Check that telescope code is valid
 telcode = args.telescope
@@ -1327,7 +1338,7 @@ lcplot1, = cx_lc.plot(time_stamps[keep_ind],lc_all[ind_ppmin],ls='-',lw=0.75,c='
                       marker='o',ms=3.2,mew=0,mfc='w',label='User')
 if grid_search:
     lcplot2, = cx_lc.plot(time_stamps[keep_ind],lc_comb[ind_comb_min],
-                          ls='None',marker='o',ms=3.2,mec='r',mfc='None',
+                          ls='None',marker='.',ms=3.0,mec='r',mfc='r',
                           mew=0.8,label='Grid')
 cx_lc.legend(ncol=2,fontsize=8)
 
@@ -1337,14 +1348,34 @@ siglevel = 4.0*np.nanmean(lsp)*1e2
 ftplot1, = cx_ft.plot(freqarr*1e6,lsp*1e2,c='w',label='User')
 if grid_search:
     freqarr2,lsp2 = calc_lsp(time_stamps[keep_ind],lc_comb[ind_comb_min])
-    ftplot2, = cx_ft.plot(freqarr2*1e6,lsp2*1e2,ls='--',lw=0.9,c='r',label='Grid')
+    siglevel2 = 4.0*np.nanmean(lsp2)*1e2
+    ftplot2, = cx_ft.plot(freqarr2*1e6,lsp2*1e2,ls='-',lw=0.8,c='r',label='Grid')
 
-cx_ft.axhline(siglevel,ls='--',lw=1.0,c='C0')
-cx_ft.set_xlim(0,max(freqarr)*1e6)
-cx_ft.set_ylim(0,1.2*max(lsp)*1e2)
-cx_ft.text(0.70*cx_ft.get_xlim()[1],siglevel+0.1*cx_ft.get_ylim()[1],
-           r'4$\langle$A$\rangle$ Sig. Level = {:.3}%'.format(siglevel), **fontb)
-cx_ft.legend(ncol=2,fontsize=8)
+if grid_search:
+    cx_ft.axhline(siglevel,ls='-.',lw=1.0,c='w')
+    cx_ft.axhline(siglevel2,ls='-.',lw=1.0,c='r')
+    cx_ft.set_xlim(0,max(freqarr)*1e6)
+    possible_levels = [max(lsp)*1e2,max(lsp2)*1e2,siglevel,siglevel2]
+    cx_ft.set_ylim(0,1.9*max(possible_levels))
+    sig_text  = r'4$\langle$A$\rangle$ = {:6.3f}%,  Max S/N = {:6.2f}'.format(
+                siglevel,4.0*max(lsp)*1e2/siglevel)
+    sig_text2 = r'4$\langle$A$\rangle$ = {:6.3f}%,  Max S/N = {:6.2f}'.format(
+                siglevel2,4.0*max(lsp2)*1e2/siglevel2)
+    cx_ft.text(0.63*cx_ft.get_xlim()[1],siglevel+0.23*cx_ft.get_ylim()[1],
+               sig_text, fontsize=9, **fontb)
+    cx_ft.text(0.63*cx_ft.get_xlim()[1],siglevel+0.10*cx_ft.get_ylim()[1],
+               sig_text2, color='r', fontsize=9, **fontb)
+    cx_ft.legend(ncol=2,fontsize=8)
+else:
+    cx_ft.axhline(siglevel,ls='--',lw=1.0,c='C0')
+    cx_ft.set_xlim(0,max(freqarr)*1e6)
+    possible_levels = [max(lsp)*1e2,siglevel]
+    cx_ft.set_ylim(0,1.9*max(possible_levels))
+    sig_text = r'4$\langle$A$\rangle$ = {:6.3f}%,  Max S/N = {:6.2f}'.format(
+               siglevel,4.0*max(lsp)*1e2/siglevel)
+    cx_ft.text(0.63*cx_ft.get_xlim()[1],siglevel+0.10*cx_ft.get_ylim()[1],
+               sig_text, fontsize=9, **fontb)
+    cx_ft.legend(ncol=2,fontsize=8)
     
 # Plot PP-Scat versus Aperture Size
 pp_majloc = MultipleLocator(0.5)
@@ -1440,7 +1471,7 @@ def on_event_c(event):
         plt.close("all")
 
     # Option to close the figure with Saving the LightCurve
-    if event.key == 'Q':
+    if (event.key == 'Q') or (event.key == 'q'):
         plt.close("all")
         print('\nProgram exited. Lightcurve was not saved.\n')
         sys.exit(1)
@@ -1470,9 +1501,14 @@ obj_dat = star_dat.loc[obj_idx].values[0]
 obj_ra = (float(obj_dat[1]) + 
           float(obj_dat[2])/60.0 + 
           float(obj_dat[3])/3600.0) * (360.0/24.0)
-obj_dec = (float(obj_dat[4]) + 
-           float(obj_dat[5])/60.0 + 
-           float(obj_dat[6])/3600.0)
+if float(obj_dat[4]) > 0:
+    obj_dec = (float(obj_dat[4]) + 
+               float(obj_dat[5])/60.0 + 
+               float(obj_dat[6])/3600.0)
+else:
+    obj_dec = (float(obj_dat[4]) - 
+               float(obj_dat[5])/60.0 - 
+               float(obj_dat[6])/3600.0)
 tcoord = SkyCoord(obj_ra,obj_dec,unit="deg",frame="icrs")
 ra_string = tcoord.to_string('hmsdms',sep=" ")[0:11]
 de_string = tcoord.to_string('hmsdms',sep=" ")[12:]

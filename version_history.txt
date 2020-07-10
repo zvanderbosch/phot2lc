@@ -203,3 +203,94 @@ Version 1.5.1 - 2020-06-25
     arithmetic on the exposure time parameter. Now, the
     get_time function will convert the exposure time to
     type float upon loading it from the header.
+
+
+Version 1.5.2 - 2020-06-28
+--------------------------
+> Fixed the command list printed with "?" to include all
+    available options, a few had been missing from the
+    "Aperture Selection" list.
+> Improved the layout of the Aperture Selection Window.
+    - Now show significance thresholds for both the 
+      User and Grid periodograms.
+    - Uses only red and white color scheme to more
+      clearly indicate what lines/markers/values
+      correspond to the Grid vs. User light curves.
+    - Now shows the maximum signal-noise of the highest
+      peak in the periodogram:
+     (Max S/N = Max Peak Height / Average Noise Level)
+> Created a new command line tool named "quicklook" 
+    which generates a plot of an extracted light curve
+    along with its periodogram and marks significant
+    peaks determined by a pre-whitening routine.
+
+
+Version 1.5.3 - 2020-07-01
+--------------------------
+> Forgot to edit the setup.py file to include the new
+    "quicklook" tool as a script. Bug has been fixed 
+    and quicklook is now available.
+
+
+Version 1.5.4 - 2020-07-01
+--------------------------
+> Added more functionality to the "quicklook" tool.
+   - Now includes 4 command line options:
+       1) -f --files
+          Input file(s) to perform quicklook on.
+       2) -s --show
+          Whether to display the quicklook plot.
+       3) -p --prewhiten
+          Whether to perform a pre-whitening sequence.
+       4) -w --wqedlc
+          Whether the input file(s) are from WQED.
+       5) -h --help
+          Print out command line options.
+
+
+Version 1.5.5 - 2020-07-01
+--------------------------
+> Bug in quicklook's import statements. Fixed.
+
+
+Version 1.5.6 - 2020-07-02
+--------------------------
+> Improved layout of the periodogram plot in the
+    aperture selection window. The y-axis scaling
+    no longer pushes the significance threshold
+    text off the top of the plot.
+
+
+Version 1.5.7 - 2020-07-02
+--------------------------
+> Fixed a bug in quicklook which loaded in the 
+    incorrect date for welded phot2lc light curves.
+
+
+Version 1.5.8 - 2020-07-03
+--------------------------
+> Fixed bug related to the calculation of an 
+    object's declination coordinate after loading it
+    from the stars.dat file. Objects with negative
+    declinations were being improperly formatted,
+    where the minute and second components were being
+    added as positive values to the degree value
+    instead of being subtracted.
+> Due to the above bug, if you have used phot2lc
+    prior to this version to calculate barycentric
+    corrections for objects with negative declinations,
+    it is highly recommended that you rerun phot2lc
+    on those objects with this or later versions.
+
+
+Version 1.5.9 - 2020-07-10
+--------------------------
+> Updates to the quicklook program. Added new command
+    line options for when performing pre-whitening:
+    -l --lower, Lower frequency limit for pre-whitening 
+                search (micro-Hertz, default = 500).
+    -u --upper, Upper frequency limit for pre-whitening 
+                search (micro-Hertz, default = 100,000).
+    -n --num  , Maximum number of pre-whitening iterations
+                (default = 10).
+

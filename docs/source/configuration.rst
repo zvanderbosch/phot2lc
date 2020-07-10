@@ -59,12 +59,12 @@ Below are detailed descriptions for each parameter's meaning and use:
 The stars.dat File
 ------------------
 
-stars.dat is a simple text file used to store object names and their corresponding RA and Dec coordinates. **The RA and Dec need to be ICRS J2000 coordinates.** You can actually name the stars.dat file whatever you want, as long as it matches the filename you provide to **stardat_location**, "stars.dat" is just a simple recommendation. The way you format each entry is specific, so below are three example lines within the file:
+stars.dat is a seven-column, whitespace-delimited text file used to store object names and their corresponding RA and Dec coordinates (sound familiar WQED users?!). **The RA and Dec must be ICRS J2000 coordinates for proper** :ref:`barycentric corrections<Barycentric Corrections>`. You can actually name the stars.dat file whatever you want, as long as it matches the filename you provide in your **config.dat** file, but from here on out this documentation will refer to the file as stars.dat. Below are three example lines within a stars.dat file:
 
-::
+.. code-block:: text
 
-   GD358          16 47 18 +32 28 32
-   ZTFJ0139+5245  01 39 06.17 +52 45 36.89
-   V386ser        16 10 33.6288972865 -01 02 23.209951458
+   GD358          16 47 18       +32 28 32
+   ZTFJ0139+5245  01 39 06.17    +52 45 36.89
+   V386ser        16 10 33.62889 -01 02 23.20995
 
-As you can see, each entry needs an object name (*no spaces allowed!*), and an RA and Dec in HMSDMS format with only spaces as delimiters. The decimal values can be to any precision you want. When you run phot2lc, the program will look for an entry in stars.dat that matches the object name retrieved from the FITS header or given as a command line argument.
+As you can see, each entry needs an object name (*no spaces allowed!*), and an RA and Dec in HMSDMS format with only spaces as delimiters. The decimal values can be to any precision you want, and you can put as many spaces between each column as you want. When you run phot2lc, the program will look for an entry in stars.dat that matches the object name retrieved from the FITS header or given as a command line argument.

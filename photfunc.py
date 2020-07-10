@@ -63,8 +63,10 @@ def print_commands():
     print("    - Type 'W' to close plots and continue without grid search. ")
     print("    - Type 'G' to close plots and continue with grid search. ")
     print("\nCOMMAND LIST - Aperture Selection:")
+    print("    - Type '?' to re-print this list of commands. ")
     print("    - Type 'd' to delete the point nearest the cursor. ")
     print("    - Type 'A' to add back all deleted points.")
+    print("    - Type 'Q' to close plots and exit the program. ")
     print("    - Type 'W' to save lightcurve with *USER* Selection.")
     print("    - Type 'G' to save lightcurve with *GRID* Selection.")
     return
@@ -236,15 +238,17 @@ def window_std(xarr,yarr,win,dwin):
     return polyy,std_values
 
 
+
+
 ########################################################
 # Functions for re-configuring the config.dat file
 
 def change_val(param,old_value):
     ## ask the user if they want to change/keep it.
-    change_value = input('Change %s? (y/[n]): ' %param.split("=")[0].strip())
+    change_value = input('Change {:<18s} (y/[n]): '.format(param.split("=")[0].strip()+"?"))
 
     if (change_value == 'Y') | (change_value == 'y'):
-        new_value = input('\nNew value for %s: ' %param.split("=")[0].strip())
+        new_value = input('New value for %s: ' %param.split("=")[0].strip())
         print('')
         return new_value
     else:
@@ -261,45 +265,34 @@ def reconfig():
         for line in f.readlines():
             print(line.strip("\n"))
             old_values.append(line.strip("\n"))
+    print('')
 
-    change_check = input("\nDo you want to change the configuration? ([y]/n): ")
 
     # Let's change it up
-    if (change_check == 'y') | (change_check == 'Y') | (change_check == ''):
-        queries = ['author            = ',
-                   'image_list_name   = ',
-                   'pixloc_name       = ',
-                   'stardat_location  = ',
-                   'default_telescope = ',
-                   'default_source    = ',
-                   'default_image     = ',
-                   'default_object    = ']
-        output = []
-        for i,q in enumerate(queries):
-            new_item = change_val(q,old_values[i].split("=")[-1].strip())
-            output.append(q + new_item)
+    queries = ['author            = ',
+               'image_list_name   = ',
+               'pixloc_name       = ',
+               'stardat_location  = ',
+               'default_telescope = ',
+               'default_source    = ',
+               'default_image     = ',
+               'default_object    = ']
+    output = []
+    for i,q in enumerate(queries):
+        new_item = change_val(q,old_values[i].split("=")[-1].strip())
+        output.append(q + new_item)
 
-        # Write new values to file
-        with open(config_path + "/config.dat", "w") as new_file:
-            for line in output:
-                new_file.write(line+"\n")
+    # Write new values to file
+    with open(config_path + "/config.dat", "w") as new_file:
+        for line in output:
+            new_file.write(line+"\n")
 
-        # Open newly saved config.dat and print results
-        print('\nNew Configuration:')
-        print('------------------')
-        with open(config_path + "/config.dat") as f:
-            for line in f.readlines():
-                print(line.strip("\n"))
-
-    # No change, exit program
-    elif (change_check == 'n') | (change_check == 'N'):
-        print("Configuration unchanged.\n")
-        sys.exit(1)
-
-    # Invalid response, exit program
-    else:
-        print('Invalid input\n')
-        sys.exit(1)
+    # Open newly saved config.dat and print results
+    print('\nNew Configuration:')
+    print('------------------')
+    with open(config_path + "/config.dat") as f:
+        for line in f.readlines():
+            print(line.strip("\n"))
 
     print('')
     return
@@ -336,7 +329,7 @@ def make_sine_func(nterms):
 
 
 # The main pre-whitening function
-def prewhiten(time,flux,Npw=10):
+def prewhiten(time,flux,Npw=1,fmin=500,fmax=100000):
 
     # Get time sampling and duration
     texp = np.median(time[1:] - time[:-1])
@@ -344,11 +337,11 @@ def prewhiten(time,flux,Npw=10):
 
     # Calculate the raw Periodogram
     farr,lsp_raw = calc_lsp(time,flux)
-    raw_threshold = 4.0*np.mean(lsp_raw[(farr>0.0001) & (farr<0.01)])
+    raw_threshold = 4.0*np.nanmean(lsp_raw[(farr>0.0005) & (farr<0.012)])
 
     # Define the peak search limits (in frequency units)
-    pmin = 0.0003
-    pmax = 1.
+    fmin = float(fmin)*1e-6 # Exclude peaks below 500 microhertz (default)
+    fmax = float(fmax)*1e-6 # Exclude peaks above 100000 microhertz (default)
 
     flux_fit = np.copy(flux)  # Make a copy of flux which will be pre-whitened
     old_names = []
@@ -356,15 +349,15 @@ def prewhiten(time,flux,Npw=10):
 
         # Calculate Lomb-Scargle Periodogram (LSP)
         farr,lsp = calc_lsp(time,flux_fit)
-        threshold = 4.0*np.mean(lsp[(farr>0.001) & (farr<0.01)])
+        threshold = 4.0*np.nanmean(lsp[(farr>0.0005) & (farr<0.012)])
 
         # Find the highest peak
         peaks,props = find_peaks(lsp,height=threshold)
         if len(peaks) > 0:
             choose_peaks = [p for p,f in zip(peaks,farr[peaks]) 
-                            if (f > pmin) & (f < pmax)]
+                            if (f > fmin) & (f < fmax)]
             choose_heights = [h for h,f in zip(props['peak_heights'],farr[peaks]) 
-                              if (f > pmin) & (f < pmax)]
+                              if (f > fmin) & (f < fmax)]
             if len(choose_peaks) == 0:
                 if i == 0:
                     peaks_found = False
@@ -427,9 +420,11 @@ def prewhiten(time,flux,Npw=10):
 
     # Return fit result or None
     if peaks_found:
-        return result,threshold
+        # Calculate LSP one more time to get the fully pre-whitened LSP
+        _,lsp = calc_lsp(time,flux_fit)
+        return result,lsp
     else:
-        return None,raw_threshold
+        return None,None
 
 
 

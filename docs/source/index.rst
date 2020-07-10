@@ -3,7 +3,7 @@ phot2lc
 
 phot2lc is a pure-Python interactive tool for extracting light curves from time-series photometric data. 
 
-phot2lc is largely inspired by WQED (`Thompson & Mullally 2009 <https://ui.adsabs.harvard.edu/abs/2009JPhCS.172a2081T/abstract>`_, `2013 <https://ui.adsabs.harvard.edu/abs/2013ascl.soft04004T/abstract>`_), and is designed to work with the outputs from both MAESTRO (`Dalessio 2010 <https://ui.adsabs.harvard.edu/abs/2010AAS...21545209D/abstract>`_, `2013 <https://ui.adsabs.harvard.edu/abs/2013PhDT.......170D/abstract>`_) and ccd_hsp (`Kanaan et al. 2002 <https://ui.adsabs.harvard.edu/abs/2002A%26A...389..896K/abstract>`_). 
+phot2lc is largely inspired by WQED (`Thompson & Mullally 2009 <https://ui.adsabs.harvard.edu/abs/2009JPhCS.172a2081T/abstract>`_, `2013 <https://ui.adsabs.harvard.edu/abs/2013ascl.soft04004T/abstract>`_), and is designed to work with the outputs from both MAESTRO (`Dalessio 2010 <https://ui.adsabs.harvard.edu/abs/2010AAS...21545209D/abstract>`_, `2013 <https://ui.adsabs.harvard.edu/abs/2013PhDT.......170D/abstract>`_) and ccd_hsp (`Kanaan et al. 2002 <https://ui.adsabs.harvard.edu/abs/2002A%26A...389..896K/abstract>`_).
 
 
 Installation
@@ -22,18 +22,20 @@ Package Contents
 ================
 
 * **phot2lc** -- The main light curve extraction program
-* **photconfig** -- A program that configures some of phot2lc's defaults
-* **weldlc** -- A program that can weld together multiple light curve files into one
+* **photconfig** -- Configures some of phot2lc's defaults
+* **weldlc** -- Welds together multiple light curve files into one
+* **quicklook** -- Generates quicklook plots of light curves and their periodograms
 
 
 Guide
 ^^^^^
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 5
     
    configuration
    quickstart
+   barycorr
    license
    help
 
