@@ -9,6 +9,16 @@ phot2lc is largely inspired by WQED (`Thompson & Mullally 2009 <https://ui.adsab
 Installation
 ============
 
+Current version: |pypi-badge| |docs-badge|
+
+.. |pypi-badge| image:: https://img.shields.io/pypi/v/phot2lc.svg
+                :target: https://pypi.python.org/pypi/phot2lc
+                :alt: PyPI Latest Version
+
+.. |docs-badge| image:: https://readthedocs.org/projects/phot2lc/badge/?version=latest
+                :target: https://phot2lc.readthedocs.io/en/latest/?badge=latest
+                :alt: Documentation Status
+
 You can install phot2lc simply with pip:
 
 .. code-block:: bash
@@ -16,6 +26,15 @@ You can install phot2lc simply with pip:
    pip install phot2lc
 
 The phot2lc project can also be found at `GitHub <https://github.com/zvanderbosch/phot2lc>`_ and at `PyPI <https://pypi.org/project/phot2lc/>`_.
+
+
+Requirements
+============
+
+* Python 3.6 or later
+* Matplotlib 3.1.3 or later
+* Astropy 4.0 or later
+
 
 
 Package Contents
