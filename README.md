@@ -9,6 +9,8 @@
 
 Much of the inspiration for this program came from the [WQED light curve extraction software](https://ui.adsabs.harvard.edu/abs/2013ascl.soft04004T/abstract), but **phot2lc** includes several new features and the ease of installation that comes with pure-Python programs.
 
+### Installation
+
 **phot2lc** can be installed with:
 
 ```bash
