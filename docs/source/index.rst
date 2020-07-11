@@ -9,15 +9,11 @@ phot2lc is largely inspired by WQED (`Thompson & Mullally 2009 <https://ui.adsab
 Installation
 ============
 
-Current version: |pypi-badge| |docs-badge|
+Current version: |pypi-badge|
 
 .. |pypi-badge| image:: https://img.shields.io/pypi/v/phot2lc.svg
                 :target: https://pypi.python.org/pypi/phot2lc
                 :alt: PyPI Latest Version
-
-.. |docs-badge| image:: https://readthedocs.org/projects/phot2lc/badge/?version=latest
-                :target: https://phot2lc.readthedocs.io/en/latest/?badge=latest
-                :alt: Documentation Status
 
 You can install phot2lc simply with pip:
 
