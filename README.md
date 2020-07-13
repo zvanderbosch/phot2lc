@@ -1,7 +1,5 @@
 # phot2lc
 
-**\*\*DISCLAIMER: phot2lc is still in its alpha development stages. It is not yet recommended to use this tool for scientifically publishable light curves. In particular, the consistency of its barycentric corrected times with those from other programs (e.g. WQED) is still actively being verified.**
-
 **phot2lc** is s pure-Python interactive tool for extracting light curves from time series photometric data.
 
 [![PyPI](https://img.shields.io/pypi/v/phot2lc.svg)](https://pypi.org/project/phot2lc/)
