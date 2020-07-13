@@ -75,7 +75,8 @@ t2ref = (t2data - bjdref) * 86400.0
 
 # Get date of bjdref
 bjd_start = Time(bjdref,format='jd',scale='tdb')
-date_start = bjd_start.to_value('isot').split("T")[0] 
+date_start = bjd_start.to_value('isot').split("T")[0]
+time_start = bjd_start.to_value('isot').split("T")[-1]
 
 # Resort and Reshape Arrays
 Nv = len(t1data)
@@ -96,6 +97,7 @@ lc_header = '{}'.format(headers[0][0][0].strip("# ")) + \
             '\n{}'.format(headers[0][1][0].strip("# ")) + \
             '\n{}'.format(headers[0][2][0].strip("# ")) + \
             '\nDate       : {:30s}# Mid-Exposure TDB Date at T0'.format(date_start) + \
+            '\nTime       : {:30s}# Mid-Exposure TDB Time at T0'.format(time_start) + \
             '\nBJED       : {:<30.9f}# Mid-Exposure TDB JD at T0'.format(bjdref) + \
             '\nWeldNum    : {:<30d}# Number of files welded'.format(Nf) + \
             '\nNpoints    : {:<30d}# Number of data points'.format(len(t1sorted)) + \

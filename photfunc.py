@@ -345,7 +345,7 @@ def prewhiten(time,flux,Npw=1,fmin=500,fmax=100000):
 
     flux_fit = np.copy(flux)  # Make a copy of flux which will be pre-whitened
     old_names = []
-    for i in range(Npw+1):
+    for i in range(Npw):
 
         # Calculate Lomb-Scargle Periodogram (LSP)
         farr,lsp = calc_lsp(time,flux_fit)

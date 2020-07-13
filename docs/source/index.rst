@@ -15,7 +15,7 @@ Current version: |pypi-badge|
                 :target: https://pypi.python.org/pypi/phot2lc
                 :alt: PyPI Latest Version
 
-You can install phot2lc simply with pip:
+You can install phot2lc with pip:
 
 .. code-block:: bash
 
@@ -27,10 +27,10 @@ The phot2lc project can also be found at `GitHub <https://github.com/zvanderbosc
 Requirements
 ============
 
-* Python 3.6 or later
-* Matplotlib 3.1.3 or later
-* Astropy 4.0 or later
-
+* Python 3.6 (or later)
+* Matplotlib 3.1.3 (or later)
+* Astropy 4.0 (or later)
+* LMFIT 1.0.1
 
 
 Package Contents
@@ -46,11 +46,12 @@ Guide
 ^^^^^
 
 .. toctree::
-   :maxdepth: 5
-    
+   :maxdepth: 6
+   
    configuration
    quickstart
    barycorr
+   additional
    license
    help
 

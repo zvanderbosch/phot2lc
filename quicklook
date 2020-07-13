@@ -32,8 +32,8 @@ version_history.txt file.
 parser = argparse.ArgumentParser(description='Provide Input & Output Filenames.')
 parser.add_argument('-f', '--files',type=str,nargs='*',
                     help="Input file(s) to perform quicklook on.")
-parser.add_argument('-s', '--show',action='store_true',
-                    help="Whether to display the quicklook plot.")
+parser.add_argument('-s', '--save',action='store_true',
+                    help="Whether to save the quicklook plot.")
 parser.add_argument('-p', '--prewhiten',action='store_true',
                     help="Whether to perform a pre-whitening sequence.")
 parser.add_argument('-l', '--lower',type=float,default=500.,
@@ -137,7 +137,7 @@ for file in filenames:
     ###########################################################
     # Plotting Code
 
-    fig = plt.figure('a',figsize=(8,6))
+    fig = plt.figure('Quicklook',figsize=(8,6))
     gs = GridSpec(2,1)
     ax0 = fig.add_subplot(gs[0])
     ax1 = fig.add_subplot(gs[1])
@@ -170,8 +170,8 @@ for file in filenames:
         if Np > 0:
             ax1.fill_between(farr*1e6,lsp_pw*1e2,y2=0,color='C3',alpha=0.4,lw=0)
             for i,f in enumerate(freq_vals):
-                ax1.plot(f*1e6,1.09*amax,ls='None',marker='|',mfc='r',mec='r',mew=0.5)
-                ax1.text(f*1e6,1.13*amax,'{}'.format(i+1),ha='center',fontsize=7,color='r')
+                ax1.plot(f*1e6,1.09*amax,ls='None',marker='|',mfc='b',mec='b',mew=0.5)
+                ax1.text(f*1e6,1.13*amax,'{}'.format(i+1),ha='center',fontsize=7,color='b')
 
         # Print out Each Peaks Frequency and Amplitude
         font = {'fontname':'Bitstream Vera Sans Mono'}
@@ -193,16 +193,15 @@ for file in filenames:
     ax1.minorticks_on()
     ax0.tick_params(which='both',axis='both',top=True,right=True,direction='in')
     ax1.tick_params(which='both',axis='both',right=True)
+    ax1.tick_params(which='both',axis='y',direction='in')
 
-    # Save the figure
-    figname = 'quicklook_{}_{}.pdf'.format(object_name,date_obs.replace("-",""))
-    plt.savefig(figname,bbox_inches='tight')
+    # Optionally Save the figure
+    if args.save:
+        figname = 'quicklook_{}.png'.format(".".join(file.split(".")[:-1]))
+        plt.savefig(figname,dpi=300,bbox_inches='tight')
 
 
-    # Optionally show figure, then close
-    if args.show:
-        plt.show()
-        plt.close()
-    else:
-        plt.close()
+    # Show figure, then close
+    plt.show()
+    plt.close()
 

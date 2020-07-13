@@ -25,6 +25,7 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
         <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -86,8 +87,13 @@
 <li class="toctree-l2"><a class="reference internal" href="#basic-usage">Basic Usage</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#input-files">Input Files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#startup">Startup</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#commands">Commands</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#command-options">Command Options</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#aperture-selection">Aperture Selection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#output-files">Output Files</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#the-lc-file">The .lc File</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#the-phot-file">The .phot File</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="barycorr.html">Barycentric Corrections</a></li>
@@ -161,6 +167,14 @@
   <div class="section" id="quickstart">
 <h1>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h1>
 <p>This quickstart guide assumes you have already performed aperture photometry using either IRAF's ccd_hsp or the Matlab-based MAESTRO software, and have already <a class="reference internal" href="configuration.html#configuration"><span class="std std-ref">configured phot2lc</span></a> to run properly on your machine.</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#basic-usage">Basic Usage</a></p></li>
+<li><p><a class="reference internal" href="#input-files">Input Files</a></p></li>
+<li><p><a class="reference internal" href="#startup">Startup</a></p></li>
+<li><p><a class="reference internal" href="#command-options">Command Options</a></p></li>
+<li><p><a class="reference internal" href="#aperture-selection">Aperture Selection</a></p></li>
+<li><p><a class="reference internal" href="#output-files">Output Files</a></p></li>
+</ul>
 <div class="section" id="basic-usage">
 <h2>Basic Usage<a class="headerlink" href="#basic-usage" title="Permalink to this headline">¶</a></h2>
 <p>phot2lc is a command line tool, and can be executed from the command line by simply typing</p>
@@ -183,35 +197,30 @@
 <p>For ccd_hsp output, phot2lc will assume the photometry files have base names of <em>runbase</em> followed by the aperture size (e.g. runbase2.5), while for MAESTRO output the photometry files are assumed to have base names of <em>counts</em>, again followed by the aperture size (e.g. counts_02.5).</p>
 <p>In addition, the following files/info should be present:</p>
 <ul class="simple">
-<li><p>stars.dat (or another file with object names and RA-Dec coordinates)</p></li>
+<li><p><a class="reference internal" href="configuration.html#the-stars-dat-file"><span class="std std-ref">stars.dat</span></a> (for RA and Dec coordinates)</p></li>
 <li><p>The first FITS image (or all images within <strong>image_list_name</strong>)</p></li>
 <li><p>If available, the file pointed to by <strong>pixloc_name</strong></p></li>
 <li><p>An entry within teledat.py corresponding to your telescope/instrument</p>
 <ul>
-<li><p>If need to add a new entry into teledat.py, you can do this yourself by editing the teledat.py file, or <a class="reference internal" href="license.html#contact"><span class="std std-ref">send a request to Zach Vanderbosch</span></a> to add your telescope into the official phot2lc package.</p></li>
+<li><p>If you need to add a new entry into teledat.py for your telescope/instrument, you can do this yourself by manually editing the teledat.py file. The format for teledat.py entries is explained within the script itself. Alternatively, you can <a class="reference internal" href="license.html#contact"><span class="std std-ref">send a request to Zach Vanderbosch</span></a> to add your telescope configuration into the official phot2lc package.</p></li>
 </ul>
 </li>
 </ul>
 </div>
 <div class="section" id="startup">
 <h2>Startup<a class="headerlink" href="#startup" title="Permalink to this headline">¶</a></h2>
-<p>Once you have started phot2lc and it successfully loads all the necessary files, the following windows will pop up:</p>
-<div class="figure align-center" id="id1">
-<a class="reference internal image-reference" href="_images/first_image.png"><img alt="First Image" src="_images/first_image.png" style="width: 500px;" /></a>
-<p class="caption"><span class="caption-text">Window displaying the first image. The target and comparison stars are marked if a <strong>pixloc_name</strong> file was provided, otherwise this will just be an unmarked image.</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+<p>Once you have started phot2lc and it successfully loads all the necessary files, the following three windows will appear (<em>click to enlarge</em>):</p>
+<p><a class="reference internal" href="_images/first_image.png"><img alt="First Image" src="_images/first_image.png" style="width: 32%;" /></a> <a class="reference internal" href="_images/raw_photometry.png"><img alt="Raw Photometry" src="_images/raw_photometry.png" style="width: 32%;" /></a> <a class="reference internal" href="_images/divided_lc.png"><img alt="Divided Light Curve" src="_images/divided_lc.png" style="width: 32%;" /></a></p>
+<p>From left to right, these windows are named:</p>
+<ul class="simple">
+<li><p><strong>First Image</strong>: Displays the first image. The target and comparison stars are marked if a <em>pixloc_name</em> file was provided, otherwise this will just be an unmarked image.</p></li>
+<li><p><strong>Raw Photometry</strong>: Displays the raw photometry for target and comparison stars, along with the amount of sky subtracted from the target. The mean values are displayed to the right of each light curve.</p></li>
+<li><p><strong>Divided Light Curve</strong>: Primarily displays the divided light curve, but also displaying the summed comparison star flux (top right panel) and the polynomial being used to de-trend the light curve (top left panel). This is where most of the interactive tools are used.</p></li>
+</ul>
 </div>
-<div class="figure align-center" id="id2">
-<a class="reference internal image-reference" href="_images/raw_photometry.png"><img alt="Raw Photometry" src="_images/raw_photometry.png" style="width: 500px;" /></a>
-<p class="caption"><span class="caption-text">Window displaying the raw photometry for target and comparison stars, along with the amount of sky subtracted from the target. The mean values are displayed to the right of each light curve.</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
-</div>
-<div class="figure align-center" id="id3">
-<a class="reference internal image-reference" href="_images/divided_lc.png"><img alt="Divided Light Curve" src="_images/divided_lc.png" style="width: 500px;" /></a>
-<p class="caption"><span class="caption-text">Window primarily displaying the divided light curve, but also displaying the summed comparison star flux (top right panel) and the polynomial being used to de-trend the light curve (top left panel).</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
-</div>
-</div>
-<div class="section" id="commands">
-<h2>Commands<a class="headerlink" href="#commands" title="Permalink to this headline">¶</a></h2>
-<p>After startup and once you have clicked within one of the windows, you can print out a full list of commands in your terminal by pressing &quot;?&quot;. The output will look like the following:</p>
+<div class="section" id="command-options">
+<h2>Command Options<a class="headerlink" href="#command-options" title="Permalink to this headline">¶</a></h2>
+<p>Similar to WQED, commands in phot2lc are executed via keyboard inputs. After startup and once you have clicked within one of the windows, you can print out a full list of command options in your terminal by pressing &quot;?&quot;. The output will look like the following:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>COMMAND LIST - Divided Light Curve:
   - Type &#39;?&#39; to re-print this list of commands.
   - Type &#39;d&#39; to delete the point nearest the cursor.
@@ -240,19 +249,93 @@ COMMAND LIST - Aperture Selection:
   - Type &#39;G&#39; to save lightcurve with *GRID* Selection.
 </pre></div>
 </div>
-<p>The &quot;Divided Light Curve&quot; command list provides your options when you are working within the divided light curve window. Within the first image and raw photometry windows, the only commands available are &quot;?&quot;, &quot;Q&quot;, &quot;W&quot;, and &quot;G&quot;. The other command list for aperture selection is for the next window that appears if you decide to continue light curve extraction by typing the &quot;W&quot; or &quot;G&quot; keys when working in the divided light curve window.</p>
+<p>The &quot;Divided Light Curve&quot; command list provides your options when you are working within the <em>Divided Light Curve</em> window. Within the <em>First Image</em> and <em>Raw Photometry</em> windows, the only commands available are &quot;?&quot;, &quot;Q&quot;, &quot;W&quot;, and &quot;G&quot;. The other command list for aperture selection is for the next window that appears if you decide to continue light curve extraction by typing the &quot;W&quot; or &quot;G&quot; keys when working in the <em>Divided Light Curve</em> window.</p>
 <p>For more detailed explanations of each command, see the PDF version of the phot2lc user guide (coming soon!).</p>
 </div>
 <div class="section" id="aperture-selection">
 <h2>Aperture Selection<a class="headerlink" href="#aperture-selection" title="Permalink to this headline">¶</a></h2>
-<p>Once you are satisfied with your selections in the divided light curve window and have chosen to continue by pressing the &quot;W&quot; or &quot;G&quot; key, a new window will appear showing the optimal light curve along with its periodogram. Also shown is a plot of average point-to-point (P2P) scatter as a function of aperture size. This is the criterion used to select the optimal light curve, that with the lowest P2P scatter.</p>
-<div class="figure align-center" id="id4">
-<a class="reference internal image-reference" href="_images/aperture_selection_user.png"><img alt="First Image" src="_images/aperture_selection_user.png" style="width: 500px;" /></a>
-<p class="caption"><span class="caption-text">The optimal light curve and aperture selection from the USER selected comparison stars.</span><a class="headerlink" href="#id4" title="Permalink to this image">¶</a></p>
+<p>phot2lc selects the optimal aperture size by identifying the light curve with the lowest average point-to-point (P2P) scatter. The average P2P scatter is defined as:</p>
+<div class="math notranslate nohighlight">
+\[\langle\mathrm{P2P}\rangle = \sqrt{\frac{\sum(y_{i+1}-y_i)^2}{N}}\]</div>
+<p>The <span class="math notranslate nohighlight">\(\langle\mathrm{P2P}\rangle\)</span> is determined for all light curves using the same settings defined in the <em>Divided Light Curve</em> window (i.e. same deleted points, same polynomial division, same comparison stars used). Currently, this selection is automated and phot2lc does not allow manual selection of a different aperture size. <em>A future version of phot2lc will likely provide this capability.</em></p>
+<p>After pressing the &quot;W&quot; or &quot;G&quot; key from any of the previous windows (i.e. <em>Divided Light Curve</em>, <em>Raw Photometry</em>, or <em>First Image</em>), these windows will be closed and a new window will appear named <em>Aperture Selection</em>. This window displays the optimal light curve along with its periodogram, and a plot of <span class="math notranslate nohighlight">\(\langle\mathrm{P2P}\rangle\)</span> versus aperture size for all light curves.</p>
+<p>If you chose the &quot;W&quot; option to continue, only one light curve, periodogram, and <span class="math notranslate nohighlight">\(\langle\mathrm{P2P}\rangle\)</span> curve will be shown (left image below). If you chose the &quot;G&quot; key, however, a grid search will have been performed considering all possible comparison star and aperture size combinations. In this case, two light curves, periodograms, and <span class="math notranslate nohighlight">\(\langle\mathrm{P2P}\rangle\)</span> curves will be shown (right image below). One set (colored white) corresponds to the standard optimization procedure performed with the User-selected comparison stars, the same as if you had pressed &quot;W&quot;. The second set (colored red), corresponds to the optimal comparison star combination found by the grid search.</p>
+<p><a class="reference internal" href="_images/aperture_selection_user.png"><img alt="First Image" src="_images/aperture_selection_user.png" style="width: 49%;" /></a> <a class="reference internal" href="_images/aperture_selection_grid.png"><img alt="First Image" src="_images/aperture_selection_grid.png" style="width: 49%;" /></a></p>
+<p>If you did not perform a grid search, you can now save the optimal light curve by again pressing &quot;W&quot;. If you did perform a grid search, you have the option save either the optimal user-selected light curve with &quot;W&quot; or the optimal grid-search-selected light curve with &quot;G&quot;.</p>
 </div>
-<div class="figure align-center" id="id5">
-<a class="reference internal image-reference" href="_images/aperture_selection_grid.png"><img alt="First Image" src="_images/aperture_selection_grid.png" style="width: 500px;" /></a>
-<p class="caption"><span class="caption-text">The optimal light curves and aperture selections from both the USER (white) and GRID (red) selected comparison stars.</span><a class="headerlink" href="#id5" title="Permalink to this image">¶</a></p>
+<div class="section" id="output-files">
+<h2>Output Files<a class="headerlink" href="#output-files" title="Permalink to this headline">¶</a></h2>
+<p>Upon choosing to save your light curve with &quot;W&quot; or &quot;G&quot;, phot2lc will perform the <a class="reference internal" href="barycorr.html#barycentric-corrections"><span class="std std-ref">barycentric time corrections</span></a> to each point and then provide you with two output files. The <strong>.lc</strong> file contains the divided light curve while the <strong>.phot</strong> file contains the raw photometry corresponding to the optimal aperture size. Again, these files are modeled very closely after the <em>.lc1</em> and <em>.wq</em> files generated by WQED.</p>
+<p>Both files start with two time columns, the first corresponding to the original times and the second corresponding to the barycentric corrected times. Both are provided in the event that you consider the barycentric corrections for your particular object to be unreliable for any reason.</p>
+<p>The naming convention for the files are <strong>&lt;object&gt;_&lt;obs_date&gt;.lc</strong> and <strong>&lt;object&gt;_&lt;obs_date&gt;.phot</strong>, where &lt;object&gt; is replaced by the object name and &lt;obs_date&gt; is replaced by the observation date in YYYYMMDD format.</p>
+<div class="section" id="the-lc-file">
+<h3>The .lc File<a class="headerlink" href="#the-lc-file" title="Permalink to this headline">¶</a></h3>
+<p>The .lc file consists of a header followed by four columns of data. The header provides information with regards to both the observations and the light curve extraction. The four columns are (1) the raw mid exposure times in seconds relative to the first exposure, (2) the barycentric corrected mid-exposure times relative to the first exposure, (3) the relative flux values, and (4) the error on the relative flux. Below is an example .lc1 file showing the header and the first and last three rows of data:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span># Object     : G117-B15A                     # Name of Object
+# RA         : 09 24 15.27                   # Object Right Ascension
+# Dec        : +35 16 51.3                   # Object Declination
+# Telescope  : McDonald 2.1m                 # Name of Telescope
+# Instrument : ProEM                         # Name of Instrument
+# TeleCode   : mcd2                          # Teledat Code Name
+# Date       : 2018-01-26                    # Mid-Exposure UTC Date at T0
+# UTC        : 05:06:01.500                  # Mid-Exposure UTC Time at T0
+# MJD        : 58144.212517361               # Mid-Exposure UTC MJD at T0
+# Exptime    : 15.000000                     # Exposure Time (s)
+# Filter     : BG40                          # Filter Name
+# BJED       : 2458144.718681479             # Mid-Exposure TDB JD at T0
+# ApPhot     : ccd_hsp                       # Photometry Program
+# OrigFile   : runbase6.                     # Source Photometry Filename
+# ApRadius   : 6.00                          # Aperture Radius (pixels)
+# AvgScatter : 1.25                          # Avg. Point-to-Point Scatter (%)
+# Comps      : 2                             # Comparison stars used
+# PolyOrder  : 3                             # Degree of Polynomial Division
+# Nkeep      : 1049                          # Number of points in light curve
+# Ndelete    : 0                             # Number of points removed
+# Author     : Zach Vanderbosch              # Author of this light curve
+# CreatedOn  : 2020-07-12 21:34:07.518       # Date created
+# Columns: Raw T-mid (s), BaryCorr T-mid (s), Rel. Flux, Rel. Flux Error
+     0.000       0.000  -0.031284   0.002743
+    15.000      15.000  -0.030957   0.002611
+    30.000      30.000  -0.029607   0.002626
+    ...         ...        ...        ...
+ 15690.000   15690.173  -0.011376   0.002271
+ 15705.000   15705.173  -0.029081   0.002532
+ 15720.000   15720.174  -0.024124   0.002615
+</pre></div>
+</div>
+</div>
+<div class="section" id="the-phot-file">
+<h3>The .phot File<a class="headerlink" href="#the-phot-file" title="Permalink to this headline">¶</a></h3>
+<p>The .phot file also starts with a header providing some of the same information as the .lc file, and is then followed by several columns of data. The first two columns are the same as for the .lc file, providing the raw and barycentric corrected times at mid-exposure with respect to the first exposure.</p>
+<p>The remaining columns provide the sky-subtracted photometric counts for the target followed by each comparison star. The last column is always the sky column and represents the amount of background counts subtracted from the target's aperture. Sky subtraction counts are not provided for the comparison stars. The number of comparison star columns will reflect the original number of comparison stars loaded in the <em>ccd_hsp</em> or <em>MAESTRO</em> photometry files, even if they don't all get used to generate the divided light curve. However, if specific points were deleted from the divided light curve, they will also be removed from this file.</p>
+<p>Below is an example .phot file, again showing the header followed by the first and last three rows of data:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span># Object     : G117-B15A                     # Name of Object
+# RA         : 09 24 15.27                   # Object Right Ascension
+# Dec        : +35 16 51.3                   # Object Declination
+# Telescope  : McDonald 2.1m                 # Name of Telescope
+# Instrument : ProEM                         # Name of Instrument
+# TeleCode   : mcd2                          # Teledat Code Name
+# Date       : 2018-01-26                    # Mid-Exp. UTC Start Date
+# UTC        : 05:06:01.500                  # Mid-Exp. UTC Start Time
+# MJD        : 58144.212517361               # Mid Exposure MJD Start
+# Exptime    : 15.000000                     # Exposure Time (s)
+# Filter     : BG40                          # Filter Name
+# BJED       : 2458144.718681479             # Mid Exp. Barycentric Julian Date
+# ApPhot     : ccd_hsp                       # Photometry Program
+# OrigFile   : runbase6.                     # Source Photometry Filename
+# ApRadius   : 6.00                          # Aperture Radius (pixels)
+# Nkeep      : 1049                          # Number of points in light curve
+# Ndelete    : 0                             # Number of points removed
+# Columns: Raw T-mid (s), BaryCorr T-mid (s), Target, Comp(s), Sky
+     0.000       0.000     192620    88577    25195    78351
+    15.000      15.000     206569    94587    27371    76162
+    30.000      30.000     204690    92457    28212    75914
+    ...         ...         ...       ...      ...      ...
+ 15690.000   15690.173     214079    93761    27382    13946
+ 15705.000   15705.173     175979    78464    22928    14297
+ 15720.000   15720.174     166926    73647    22034    15337
+</pre></div>
+</div>
 </div>
 </div>
 </div>

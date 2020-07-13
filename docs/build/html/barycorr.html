@@ -25,6 +25,7 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
         <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -84,7 +85,7 @@
 <li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Barycentric Corrections</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#verification">Verification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#timing-verifications">Timing Verifications</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
@@ -164,15 +165,15 @@
 <li><p><strong>Leap Seconds</strong> are now <a class="reference external" href="https://docs.astropy.org/en/stable/whatsnew/4.0.html#whatsnew-4-0-time-leap-seconds">automatically checked and updated by Astropy (v4.0 or later)</a></p></li>
 </ul>
 <p>Common sources of timing errors include typos in the stars.dat file, using the wrong coordinate epoch (must be J2000!), using the wrong object name which would load the wrong coordinates from stars.dat, using the wrong telescope code for your reductions, using an outdated leap seconds file (hopefully not since Astropy auto-updates it now), or perhaps errors in the raw time stamps for your images. It is always worth double checking these pieces of information throughout your reduction process!</p>
-<div class="section" id="verification">
-<h2>Verification<a class="headerlink" href="#verification" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="timing-verifications">
+<h2>Timing Verifications<a class="headerlink" href="#timing-verifications" title="Permalink to this headline">¶</a></h2>
 <p>To verify that phot2lc is providing accurate barycentric corrections, a comparison with the corrections from other programs (WQED and <a class="reference external" href="http://astroutils.astronomy.ohio-state.edu/time/utc2bjd.html">UTC2BJD</a>) has been performed for 73 different objects with a total of 138 light curves. Distributions of Barycentric Julian Date (BJD) differences between these programs are shown below, which are calculated using the mid-exposure time of the first data point for each light curve.</p>
 <div class="figure align-center" id="id1">
 <a class="reference internal image-reference" href="_images/bjd_comparisons.png"><img alt="BJD Differences" src="_images/bjd_comparisons.png" style="width: 600px;" /></a>
 <p class="caption"><span class="caption-text">Distributions of BJD differences between phot2lc, WQED, and UTC2BJD.</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
 </div>
 <p>The distribution of BJD differences between phot2lc and WQED is much broader than with UTC2BJD, but WQED does not take into account the Earth location of the observatory used, whereas both phot2lc and UTC2BJD do. The excellent agreement with UTC2BJD suggests that taking the Earth location into account corrects most of the larger disagreements between phot2lc and WQED, which max out at around 50 milliseconds for this sample. While this is often much less than the timing uncertainties associated with image acquisition, the improved accuracy certainly doesn't hurt and with Astropy is a very easy correction to perform.</p>
-<p>Another difference between phot2lc and WQED is the point-by-point correction method. WQED performs barycentric corrections by calculating a linear interpolation between the first data point's time stamp and a time stamp 0.5-days later. phot2lc, on the other hand, performs a barycentric correction for each point individually. This difference is expected to result in only minor changes in the timing corrections, often different by a few milliseconds or less, but can occasionally reach higher. In our sample, only one out of 73 objects exceeded a 10ms correction difference due to the point-by-point method (see figure below), again much smaller than the typical timing uncertainties.</p>
+<p>Another difference between phot2lc and WQED is the point-by-point correction method. WQED performs barycentric corrections by calculating a linear interpolation between the first data point's time stamp and a time stamp 0.5-days later. phot2lc, on the other hand, performs a barycentric correction for each point individually. This difference is expected to result in only minor changes in the timing corrections, often different by a few milliseconds or less, but can occasionally reach higher. In our sample, only one out of 73 objects exceeded a 10ms correction difference compared with WQED due to phot2lc's point-by-point method (see figure below). Again, this is much smaller than the typical timing uncertainties, but the additional timing accuracy certainly doesn't hurt.</p>
 <div class="figure align-center" id="id2">
 <a class="reference internal image-reference" href="_images/pbp_comparisons.png"><img alt="Point-by-Point Correction Differences" src="_images/pbp_comparisons.png" style="width: 400px;" /></a>
 <p class="caption"><span class="caption-text">Distribution of the largest difference in corrections per light curve when performing a point-by-point (phot2lc) versus linear interpolation (WQED) correction method.</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>

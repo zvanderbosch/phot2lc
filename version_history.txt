@@ -293,4 +293,34 @@ Version 1.5.9 - 2020-07-10
                 search (micro-Hertz, default = 100,000).
     -n --num  , Maximum number of pre-whitening iterations
                 (default = 10).
+    These new options provide the user with more control
+    over the pre-whitening process, in particular when the
+    object of interest shows low-frequency variability.
+
+Version 1.5.10 - 2020-07-12
+---------------------------
+> Improved the x,y coordinates for text in the "First Image"
+    window so that each star's label no longer overlaps the
+    star or circle marker.
+> Added an additional curve to the P2P Scatter vs. Aperture
+    size plot when the Grid search option is used. This
+    curve, colored red, shows the P2P vs. Ap Size trend for
+    the grid search's determination of the optimal comp 
+    star combination. 
+> Improved y-axis scaling of the periodogram plot in the
+    Aperture Selection window.
+> Added legend to P2P vs. ApSize plot showing the comparison
+    stars used and the minimum P2P scatter value.
+> Added a "Time" keyword in the welded light curve header.
+> Changed the "UTC" keyword in .lc and .phot file headers to
+    "Time" to be consistent with the welded file header.
+> The quicklook -s option is now for optionally saving rather
+    than optionally showing the resulting plot. The plot is 
+    now always shown.
+> The quicklook output file naming convention was changed
+    from quicklook_object_date.pdf to quicklook_filename.pdf
+    where "filename" is the input .lc file's name.
+> Fixed bug in photfunc.py's prewhiten function which 
+    calculated one more pre-whitening step than requested.
+
 

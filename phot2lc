@@ -298,6 +298,7 @@ if telcode == 'mcd2':
     image0 = fits.getdata(fits_list[0])[0]
 else:
     image0 = fits.getdata(fits_list[0])
+imrows,imcols = np.shape(image0)
 
 # Get Z-Scale Normalization vmin and vmax
 ZS = ZScaleInterval(nsamples=10000, contrast=0.15, max_reject=0.5, 
@@ -326,12 +327,14 @@ im.imshow(image0, cmap='gray',vmin=vmin0, vmax=vmax0)
 for i in range(len(tloc)):
     if i == 0:
         im.plot(tloc[i,0],tloc[i,1],
-                ls='None',marker='o',ms=15,mew=2.0,mec='c',mfc='None')
-        im.text(tloc[i,0],tloc[i,1]+15,'Target',ha='center',fontsize=12,**fonta)
+                ls='None',marker='o',ms=13,mew=2.0,mec='c',mfc='None')
+        im.text(tloc[i,0],tloc[i,1]+0.055*imrows,'Target',
+                ha='center',fontsize=12,**fonta)
     else:
         im.plot(tloc[i,0],tloc[i,1],
-                ls='None',marker='o',ms=15,mew=2.0,mec='m',mfc='None')
-        im.text(tloc[i,0],tloc[i,1]+15,'Comp {}'.format(i),ha='center',fontsize=12,**fonta)
+                ls='None',marker='o',ms=13,mew=2.0,mec='m',mfc='None')
+        im.text(tloc[i,0],tloc[i,1]+0.055*imrows,'Comp {}'.format(i),
+                ha='center',fontsize=12,**fonta)
 
 # Make Axes invisible
 plt.axis("off")
@@ -1279,6 +1282,19 @@ if grid_search:
     # Get index of minimum Combination
     ind_comb_min = pp_comb.index(min(pp_comb))
 
+    # Calculate the P2P scatter for light curves using
+    # the optimal selection of combination stars
+    pp_all_grid = []
+    for i in range(Nf):
+        phot_t = phot_data[i][1].replace(0.0,1.0).values
+        phot_c = np.sum(phot_data[i][all_combs[ind_comb_min]].replace(0.0,1.0).values,axis=1)
+        lc,_,_,_ = div_lc(time_stamps,phot_t,phot_c,deg,keep_ind,dele_ind)
+        pp = pp_scat(lc)
+        pp_all_grid.append(pp*1e2)
+
+    # Get index of minimum aperture
+    ind_ppmin_grid = pp_all_grid.index(min(pp_all_grid))
+
 
 # Print out a message showing P2P for User Selected Comps + Optimal Aperture
 apmin_user = ap_sizes[ind_ppmin]
@@ -1329,9 +1345,15 @@ cx_pp = figc.add_subplot(gsc[2])
 figc.canvas.set_window_title('Aperture Selection')
 
 # Set xy-limits of the PP plot
-ppdiff = max(pp_all) - min(pp_all)
+if grid_search:
+    pplow = min(pp_all+pp_all_grid)
+    ppupp = max(pp_all+pp_all_grid)
+else:
+    pplow = min(pp_all)
+    ppupp = max(pp_all)
+ppdiff = ppupp - pplow
 cx_pp.set_xlim(min(ap_sizes)-0.4 ,max(ap_sizes)+0.4)
-cx_pp.set_ylim(min(pp_all)-0.2*ppdiff, max(pp_all)+0.2*ppdiff)
+cx_pp.set_ylim(pplow-0.2*ppdiff, ppupp+0.2*ppdiff)
 
 # Plot Light Curve from Optimal Apertured
 lcplot1, = cx_lc.plot(time_stamps[keep_ind],lc_all[ind_ppmin],ls='-',lw=0.75,c='#FFFFFF88',
@@ -1340,7 +1362,7 @@ if grid_search:
     lcplot2, = cx_lc.plot(time_stamps[keep_ind],lc_comb[ind_comb_min],
                           ls='None',marker='.',ms=3.0,mec='r',mfc='r',
                           mew=0.8,label='Grid')
-cx_lc.legend(ncol=2,fontsize=8)
+cx_lc.legend(ncol=2,fontsize=8,loc='upper right')
 
 # Plot Periodogram of Optimal Light Curve
 freqarr,lsp = calc_lsp(time_stamps[keep_ind],lc_all[ind_ppmin])
@@ -1355,8 +1377,13 @@ if grid_search:
     cx_ft.axhline(siglevel,ls='-.',lw=1.0,c='w')
     cx_ft.axhline(siglevel2,ls='-.',lw=1.0,c='r')
     cx_ft.set_xlim(0,max(freqarr)*1e6)
-    possible_levels = [max(lsp)*1e2,max(lsp2)*1e2,siglevel,siglevel2]
-    cx_ft.set_ylim(0,1.9*max(possible_levels))
+    lsp_levels = [max(lsp)*1e2,max(lsp2)*1e2]
+    sig_levels = [siglevel,siglevel2]
+    if max(lsp_levels) > 1.58*max(sig_levels):
+        max_height = 1.2*max(lsp_levels)
+    else:
+        max_height = 1.9*max(sig_levels)
+    cx_ft.set_ylim(0,max_height)
     sig_text  = r'4$\langle$A$\rangle$ = {:6.3f}%,  Max S/N = {:6.2f}'.format(
                 siglevel,4.0*max(lsp)*1e2/siglevel)
     sig_text2 = r'4$\langle$A$\rangle$ = {:6.3f}%,  Max S/N = {:6.2f}'.format(
@@ -1365,27 +1392,40 @@ if grid_search:
                sig_text, fontsize=9, **fontb)
     cx_ft.text(0.63*cx_ft.get_xlim()[1],siglevel+0.10*cx_ft.get_ylim()[1],
                sig_text2, color='r', fontsize=9, **fontb)
-    cx_ft.legend(ncol=2,fontsize=8)
+    cx_ft.legend(ncol=2,fontsize=8,loc='upper right')
 else:
     cx_ft.axhline(siglevel,ls='--',lw=1.0,c='C0')
     cx_ft.set_xlim(0,max(freqarr)*1e6)
-    possible_levels = [max(lsp)*1e2,siglevel]
-    cx_ft.set_ylim(0,1.9*max(possible_levels))
+    if max(lsp)*1e2 > 1.58*siglevel:
+        max_height = 1.2*max(lsp)*1e2
+    else:
+        max_height = 1.9*siglevel
+    cx_ft.set_ylim(0,max_height)
     sig_text = r'4$\langle$A$\rangle$ = {:6.3f}%,  Max S/N = {:6.2f}'.format(
                siglevel,4.0*max(lsp)*1e2/siglevel)
     cx_ft.text(0.63*cx_ft.get_xlim()[1],siglevel+0.10*cx_ft.get_ylim()[1],
                sig_text, fontsize=9, **fontb)
-    cx_ft.legend(ncol=2,fontsize=8)
+    cx_ft.legend(ncol=2,fontsize=8,loc='upper right')
     
 # Plot PP-Scat versus Aperture Size
 pp_majloc = MultipleLocator(0.5)
-pplot, = cx_pp.plot(ap_sizes,pp_all,ls='-',lw=1,c='w',
-                    marker='o',ms=4,mec='w',mfc='w')
+pp_label = "User, Comps {}, Min. P2P = {:.3f} %".format(comp_str1,min(pp_all))
+pplot, = cx_pp.plot(ap_sizes,pp_all,ls='-',lw=1.0,c='#FFFFFFAA',
+                    marker='o',ms=4,mec='w',mfc='w',label=pp_label)
+if grid_search:
+    ppgrid_label = "Grid, Comps {}, Min. P2P = {:.3f} %".format(comp_str2,min(pp_all_grid))
+    pplot_grid, = cx_pp.plot(ap_sizes,pp_all_grid,ls='--',lw=0.75,c='r',
+                             marker='o',ms=5,mec='r',mfc='None',label=ppgrid_label)
 cx_pp.xaxis.set_major_locator(pp_majloc)
 
 # Print a special marker for the minimum scatter aperture
 cx_pp.plot(ap_sizes[ind_ppmin],pp_all[ind_ppmin],ls='None',
            marker='s',ms=9,mec='c',mfc='None',mew=1.5)
+if grid_search:
+    cx_pp.plot(ap_sizes[ind_ppmin_grid],pp_all_grid[ind_ppmin_grid],ls='None',
+               marker='o',ms=9,mec='C1',mfc='None',mew=1.5)
+cx_pp.legend(ncol=1,fontsize=8,loc='upper right')
+
 
 # Add text and labels
 cx_lc.set_xlabel('Time (s)',fontsize=9,**fontb)
@@ -1393,7 +1433,7 @@ cx_lc.set_ylabel('Rel. Flux (%)',fontsize=9,**fontb)
 cx_ft.set_xlabel('Frequency ($\mu$Hz)',fontsize=9,**fontb)
 cx_ft.set_ylabel('Amplitude (%)',fontsize=9,**fontb)
 cx_pp.set_xlabel('Aperture Radius (pix)',fontsize=9,**fontb)
-cx_pp.set_ylabel('P2P-Scatter (%)',fontsize=9,**fontb)
+cx_pp.set_ylabel('Avg. P2P-Scatter (%)',fontsize=9,**fontb)
 cx_lc.tick_params(direction='in',labelsize=8)
 cx_ft.tick_params(direction='in',labelsize=8)
 cx_pp.tick_params(direction='in',labelsize=8)
@@ -1401,19 +1441,25 @@ cx_pp.tick_params(which='major',axis='x',labelrotation=70)
 
 
 # Add title
-titlec = 'Optimal Aperture Selection'.format(obj_name,print_date)
+titlec = '{} Optimal Aperture Selection   UT-Date: {}'.format(obj_name,print_date)
 cx_lc.set_title(titlec,loc='center',fontsize=14,**fontb)
 
 # Set some more initial parameters
 num_ppdel = 0
 keep_ppx = np.copy(np.asarray(ap_sizes))
-keep_ppy = np.copy(np.asarray(pp_all)) 
+keep_ppy = np.copy(np.asarray(pp_all))
+if grid_search: 
+    keep_ppy_grid = np.copy(np.asarray(pp_all_grid)) 
 dele_ppx = np.asarray([]) 
 dele_ppy = np.asarray([])
+if grid_search:
+    dele_ppy_grid = np.asarray([])
+
 # Add some basic interactive capabilities
 def on_event_c(event):
     global cx_pp,pplot,save_user,grid_search
-    global keep_ppx,keep_ppy,dele_ppx,dele_ppy,num_ppdel
+    global keep_ppx,keep_ppy,keep_ppy_grid
+    global dele_ppx,dele_ppy,dele_ppy_grid,num_ppdel
 
     # Add ALL deleted points back to the plot
     if event.key == 'A':
@@ -1423,18 +1469,31 @@ def on_event_c(event):
             keep_ppy = np.append(keep_ppy,dele_ppy[:])
             dele_ppx = np.asarray([])
             dele_ppy = np.asarray([])
+            if grid_search:
+                keep_ppy_grid = np.append(keep_ppy_grid,dele_ppy_grid[:])
+                dele_ppy_grid = np.asarray([])
             num_ppdel = 0
 
             # Re-sort the keep array
             keep_ppy = keep_ppy[keep_ppx.argsort()]
+            if grid_search:
+                keep_ppy_grid = keep_ppy_grid[keep_ppx.argsort()]
             keep_ppx = keep_ppx[keep_ppx.argsort()]
 
             # Update the plot
             pplot.set_data(keep_ppx,keep_ppy)
+            if grid_search:
+                pplot_grid.set_data(keep_ppx,keep_ppy_grid)
 
             # Update Y limits
-            ppdiff = max(keep_ppy) - min(keep_ppy)
-            cx_pp.set_ylim(min(keep_ppy)-0.2*ppdiff, max(keep_ppy)+0.2*ppdiff)
+            if grid_search:
+                pplow = min(np.concatenate((keep_ppy,keep_ppy_grid)))
+                ppupp = max(np.concatenate((keep_ppy,keep_ppy_grid)))
+            else:
+                pplow = min(keep_ppy)
+                ppupp = max(keep_ppy)
+            ppdiff = ppupp - pplow
+            cx_pp.set_ylim(pplow-0.2*ppdiff, ppupp+0.2*ppdiff)
             plt.draw()
 
     # Delete a single point from the light curve
@@ -1448,14 +1507,25 @@ def on_event_c(event):
             dele_ppy = np.append(dele_ppy,keep_ppy[idx])
             keep_ppx = np.delete(keep_ppx,idx)
             keep_ppy = np.delete(keep_ppy,idx)
+            if grid_search:
+                dele_ppy_grid = np.append(dele_ppy_grid,keep_ppy_grid[idx])
+                keep_ppy_grid = np.delete(keep_ppy_grid,idx)
             num_ppdel += 1
 
             # Update the plot
             pplot.set_data(keep_ppx,keep_ppy)
+            if grid_search:
+                pplot_grid.set_data(keep_ppx,keep_ppy_grid)
 
             # Update Y limits
-            ppdiff = max(keep_ppy) - min(keep_ppy)
-            cx_pp.set_ylim(min(keep_ppy)-0.2*ppdiff, max(keep_ppy)+0.2*ppdiff)
+            if grid_search:
+                pplow = min(np.concatenate((keep_ppy,keep_ppy_grid)))
+                ppupp = max(np.concatenate((keep_ppy,keep_ppy_grid)))
+            else:
+                pplow = min(keep_ppy)
+                ppupp = max(keep_ppy)
+            ppdiff = ppupp - pplow
+            cx_pp.set_ylim(pplow-0.2*ppdiff, ppupp+0.2*ppdiff)
             plt.draw()
 
     # Option to close the figure and Save the *USER* LightCurve
@@ -1589,8 +1659,8 @@ rawphot_header = 'Object     : {:30s}# Name of Object'.format(obj_name) + \
     '\nInstrument : {:30s}# Name of Instrument'.format(instrument) + \
     '\nTeleCode   : {:30s}# Teledat Code Name'.format(telcode) + \
     '\nDate       : {:30s}# Mid-Exp. UTC Start Date'.format(st.split("T")[0]) + \
-    '\nUTC        : {:30s}# Mid-Exp. UTC Start Time'.format(st.split("T")[1]) + \
-    '\nMJD        : {:<30.9f}# Mid Exposure MJD Start'.format(st_mjd) + \
+    '\nTime       : {:30s}# Mid-Exp. UTC Start Time'.format(st.split("T")[1]) + \
+    '\nMJD        : {:<30.9f}# Mid Exposure UTC MJD Start'.format(st_mjd) + \
     '\nExptime    : {:<30.6f}# Exposure Time (s)'.format(texp) + \
     '\nFilter     : {:30s}# Filter Name'.format(filter_name) + \
     '\nBJED       : {:<30.9f}# Mid Exp. Barycentric Julian Date'.format(bjdref.value) + \
@@ -1609,7 +1679,7 @@ lcfin_header = 'Object     : {:30s}# Name of Object'.format(obj_name) + \
     '\nInstrument : {:30s}# Name of Instrument'.format(instrument) + \
     '\nTeleCode   : {:30s}# Teledat Code Name'.format(telcode) + \
     '\nDate       : {:30s}# Mid-Exposure UTC Date at T0'.format(st.split("T")[0]) + \
-    '\nUTC        : {:30s}# Mid-Exposure UTC Time at T0'.format(st.split("T")[1]) + \
+    '\nTime       : {:30s}# Mid-Exposure UTC Time at T0'.format(st.split("T")[1]) + \
     '\nMJD        : {:<30.9f}# Mid-Exposure UTC MJD at T0'.format(st_mjd) + \
     '\nExptime    : {:<30.6f}# Exposure Time (s)'.format(texp) + \
     '\nFilter     : {:30s}# Filter Name'.format(filter_name) + \

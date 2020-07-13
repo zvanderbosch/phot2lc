@@ -10,8 +10,8 @@ While most of what phot2lc does is relatively straightforward, the barycentric t
 
 Common sources of timing errors include typos in the stars.dat file, using the wrong coordinate epoch (must be J2000!), using the wrong object name which would load the wrong coordinates from stars.dat, using the wrong telescope code for your reductions, using an outdated leap seconds file (hopefully not since Astropy auto-updates it now), or perhaps errors in the raw time stamps for your images. It is always worth double checking these pieces of information throughout your reduction process!
 
-Verification
-------------
+Timing Verifications
+--------------------
 
 To verify that phot2lc is providing accurate barycentric corrections, a comparison with the corrections from other programs (WQED and `UTC2BJD <http://astroutils.astronomy.ohio-state.edu/time/utc2bjd.html>`_) has been performed for 73 different objects with a total of 138 light curves. Distributions of Barycentric Julian Date (BJD) differences between these programs are shown below, which are calculated using the mid-exposure time of the first data point for each light curve.
 
@@ -24,7 +24,7 @@ To verify that phot2lc is providing accurate barycentric corrections, a comparis
 
 The distribution of BJD differences between phot2lc and WQED is much broader than with UTC2BJD, but WQED does not take into account the Earth location of the observatory used, whereas both phot2lc and UTC2BJD do. The excellent agreement with UTC2BJD suggests that taking the Earth location into account corrects most of the larger disagreements between phot2lc and WQED, which max out at around 50 milliseconds for this sample. While this is often much less than the timing uncertainties associated with image acquisition, the improved accuracy certainly doesn't hurt and with Astropy is a very easy correction to perform.
 
-Another difference between phot2lc and WQED is the point-by-point correction method. WQED performs barycentric corrections by calculating a linear interpolation between the first data point's time stamp and a time stamp 0.5-days later. phot2lc, on the other hand, performs a barycentric correction for each point individually. This difference is expected to result in only minor changes in the timing corrections, often different by a few milliseconds or less, but can occasionally reach higher. In our sample, only one out of 73 objects exceeded a 10ms correction difference due to the point-by-point method (see figure below), again much smaller than the typical timing uncertainties.
+Another difference between phot2lc and WQED is the point-by-point correction method. WQED performs barycentric corrections by calculating a linear interpolation between the first data point's time stamp and a time stamp 0.5-days later. phot2lc, on the other hand, performs a barycentric correction for each point individually. This difference is expected to result in only minor changes in the timing corrections, often different by a few milliseconds or less, but can occasionally reach higher. In our sample, only one out of 73 objects exceeded a 10ms correction difference compared with WQED due to phot2lc's point-by-point method (see figure below). Again, this is much smaller than the typical timing uncertainties, but the additional timing accuracy certainly doesn't hurt.
 
 .. figure:: ./images/pbp_comparisons.png
   :width: 400
