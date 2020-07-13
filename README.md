@@ -30,3 +30,4 @@ Documentation for **phot2lc** can be found at [phot2lc.readthedocs.io](https://p
 * Python 3.6 (or later)
 * matplotlib 3.1.3 (or later)
 * Astropy 4.0 (or later)
+* LMFIT 1.0.1
