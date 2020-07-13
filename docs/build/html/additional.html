@@ -212,7 +212,7 @@
 <a class="reference internal image-reference" href="_images/basic_quicklook.png"><img alt="Basic Quicklook" src="_images/basic_quicklook.png" style="width: 75%;" /></a>
 </div>
 <p>If you would like to perform a pre-whitening sequence to identify significant peaks in the periodogram, you need only specify the <em>-p</em> option. Pre-whitening is a procedure by which significant peaks in the periodogram are iteratively identified and then removed by subtracting a corresponding best-fit sinusoidal model from the light curve. Peaks are identified as significant if they rise above a significance threshold, which is defined in quicklook as four times the average periodogram amplitude, <span class="math notranslate nohighlight">\(\langle 4\mathrm{A} \rangle\)</span>, between <span class="math notranslate nohighlight">\(500\)</span> and <span class="math notranslate nohighlight">\(12{,}000\;\mu\mathrm{Hz}\)</span>. If a significant peak is found, its height and center are used as the initial guesses for a sinusoidal model's amplitude and frequency, and a least squares fit (via <a class="reference external" href="https://lmfit.github.io/lmfit-py/">LMFIT</a>) is then performed to optimize those parameters. The resulting model is then subtracted from the light curve and a new periodogram of the residuals is calculated. This process repeats itself until no more significant peaks are found or until the maximum number of pre-whitening iterations set by <em>-n</em> is reached. Peaks are identified in order of decreasing amplitude.</p>
-<p>An example of using the pre-whitening option would look like</p>
+<p>An example of using the pre-whitening option would look like:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>quicklook -f *.lc -p
 </pre></div>
 </div>
@@ -228,11 +228,11 @@
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>quicklook -f *.lc -p -n <span class="m">3</span>
 </pre></div>
 </div>
-<p>Either way, the resulting plot would look like</p>
+<p>Either way, the resulting plot would look like:</p>
 <div class="figure align-center">
 <a class="reference internal image-reference" href="_images/prewhitening_limits_quicklook.png"><img alt="Pre-Whitening with Limits Quicklook" src="_images/prewhitening_limits_quicklook.png" style="width: 75%;" /></a>
 </div>
-<p>Lastly, if you wish to use the quicklook function to analyze WQED light curve files, this is possible if you just specify the <em>-w</em> option, like</p>
+<p>Lastly, if you wish to use the quicklook function to analyze WQED light curve files, this is possible if you just specify the <em>-w</em> option:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>quicklook -f *.lc1 -w
 </pre></div>
 </div>

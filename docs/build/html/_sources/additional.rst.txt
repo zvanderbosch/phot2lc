@@ -70,7 +70,7 @@ and the displayed plot would look like the following:
 
 If you would like to perform a pre-whitening sequence to identify significant peaks in the periodogram, you need only specify the *-p* option. Pre-whitening is a procedure by which significant peaks in the periodogram are iteratively identified and then removed by subtracting a corresponding best-fit sinusoidal model from the light curve. Peaks are identified as significant if they rise above a significance threshold, which is defined in quicklook as four times the average periodogram amplitude, :math:`\langle 4\mathrm{A} \rangle`, between :math:`500` and :math:`12{,}000\;\mu\mathrm{Hz}`. If a significant peak is found, its height and center are used as the initial guesses for a sinusoidal model's amplitude and frequency, and a least squares fit (via `LMFIT <https://lmfit.github.io/lmfit-py/>`_) is then performed to optimize those parameters. The resulting model is then subtracted from the light curve and a new periodogram of the residuals is calculated. This process repeats itself until no more significant peaks are found or until the maximum number of pre-whitening iterations set by *-n* is reached. Peaks are identified in order of decreasing amplitude.
 
-An example of using the pre-whitening option would look like
+An example of using the pre-whitening option would look like:
 
 .. code-block:: bash
 
@@ -95,14 +95,14 @@ or
 
   quicklook -f *.lc -p -n 3
 
-Either way, the resulting plot would look like
+Either way, the resulting plot would look like:
 
 .. figure:: ./images/prewhitening_limits_quicklook.png
    :width: 75%
    :align: center
    :alt: Pre-Whitening with Limits Quicklook
 
-Lastly, if you wish to use the quicklook function to analyze WQED light curve files, this is possible if you just specify the *-w* option, like
+Lastly, if you wish to use the quicklook function to analyze WQED light curve files, this is possible if you just specify the *-w* option:
 
 .. code-block:: bash
 

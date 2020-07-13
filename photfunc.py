@@ -146,7 +146,7 @@ def get_loc(hdr,telcode):
 # Function for calculating P2P scatter of a light curve
 def pp_scat(ydata):  
     Nv = len(ydata)
-    pp_avg = (sum((ydata[0:-1]-ydata[1:])**2)/Nv)**(0.5)
+    pp_avg = (sum((ydata[0:-1]-ydata[1:])**2)/(Nv-1))**(0.5)
     return pp_avg
 
 # Function to calculate a polynomial fit to a lightcurve

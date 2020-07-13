@@ -92,11 +92,13 @@
 <li class="toctree-l2"><a class="reference internal" href="#output-files">Output Files</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#the-lc-file">The .lc File</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#the-phot-file">The .phot File</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#the-phot2lc-log-file">The phot2lc_log File</a></li>
 </ul>
 </li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="barycorr.html">Barycentric Corrections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="additional.html">Additional Tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
 <li class="toctree-l1"><a class="reference internal" href="license.html#contact">Contact</a></li>
 <li class="toctree-l1"><a class="reference internal" href="help.html">Need Help</a></li>
@@ -213,7 +215,7 @@
 <p><a class="reference internal" href="_images/first_image.png"><img alt="First Image" src="_images/first_image.png" style="width: 32%;" /></a> <a class="reference internal" href="_images/raw_photometry.png"><img alt="Raw Photometry" src="_images/raw_photometry.png" style="width: 32%;" /></a> <a class="reference internal" href="_images/divided_lc.png"><img alt="Divided Light Curve" src="_images/divided_lc.png" style="width: 32%;" /></a></p>
 <p>From left to right, these windows are named:</p>
 <ul class="simple">
-<li><p><strong>First Image</strong>: Displays the first image. The target and comparison stars are marked if a <em>pixloc_name</em> file was provided, otherwise this will just be an unmarked image.</p></li>
+<li><p><strong>First Image</strong>: Displays the first image. The target and comparison stars are marked if a <em>pixloc_name</em> file was provided, otherwise this will just be an unmarked image. This image will be saved as a PNG file when the program is run.</p></li>
 <li><p><strong>Raw Photometry</strong>: Displays the raw photometry for target and comparison stars, along with the amount of sky subtracted from the target. The mean values are displayed to the right of each light curve.</p></li>
 <li><p><strong>Divided Light Curve</strong>: Primarily displays the divided light curve, but also displaying the summed comparison star flux (top right panel) and the polynomial being used to de-trend the light curve (top left panel). This is where most of the interactive tools are used.</p></li>
 </ul>
@@ -256,7 +258,7 @@ COMMAND LIST - Aperture Selection:
 <h2>Aperture Selection<a class="headerlink" href="#aperture-selection" title="Permalink to this headline">¶</a></h2>
 <p>phot2lc selects the optimal aperture size by identifying the light curve with the lowest average point-to-point (P2P) scatter. The average P2P scatter is defined as:</p>
 <div class="math notranslate nohighlight">
-\[\langle\mathrm{P2P}\rangle = \sqrt{\frac{\sum(y_{i+1}-y_i)^2}{N}}\]</div>
+\[\langle\mathrm{P2P}\rangle = \sqrt{\frac{\sum_{i=0}^{N-1}(y_{i+1}-y_i)^2}{N-1}}\]</div>
 <p>The <span class="math notranslate nohighlight">\(\langle\mathrm{P2P}\rangle\)</span> is determined for all light curves using the same settings defined in the <em>Divided Light Curve</em> window (i.e. same deleted points, same polynomial division, same comparison stars used). Currently, this selection is automated and phot2lc does not allow manual selection of a different aperture size. <em>A future version of phot2lc will likely provide this capability.</em></p>
 <p>After pressing the &quot;W&quot; or &quot;G&quot; key from any of the previous windows (i.e. <em>Divided Light Curve</em>, <em>Raw Photometry</em>, or <em>First Image</em>), these windows will be closed and a new window will appear named <em>Aperture Selection</em>. This window displays the optimal light curve along with its periodogram, and a plot of <span class="math notranslate nohighlight">\(\langle\mathrm{P2P}\rangle\)</span> versus aperture size for all light curves.</p>
 <p>If you chose the &quot;W&quot; option to continue, only one light curve, periodogram, and <span class="math notranslate nohighlight">\(\langle\mathrm{P2P}\rangle\)</span> curve will be shown (left image below). If you chose the &quot;G&quot; key, however, a grid search will have been performed considering all possible comparison star and aperture size combinations. In this case, two light curves, periodograms, and <span class="math notranslate nohighlight">\(\langle\mathrm{P2P}\rangle\)</span> curves will be shown (right image below). One set (colored white) corresponds to the standard optimization procedure performed with the User-selected comparison stars, the same as if you had pressed &quot;W&quot;. The second set (colored red), corresponds to the optimal comparison star combination found by the grid search.</p>
@@ -265,8 +267,13 @@ COMMAND LIST - Aperture Selection:
 </div>
 <div class="section" id="output-files">
 <h2>Output Files<a class="headerlink" href="#output-files" title="Permalink to this headline">¶</a></h2>
-<p>Upon choosing to save your light curve with &quot;W&quot; or &quot;G&quot;, phot2lc will perform the <a class="reference internal" href="barycorr.html#barycentric-corrections"><span class="std std-ref">barycentric time corrections</span></a> to each point and then provide you with two output files. The <strong>.lc</strong> file contains the divided light curve while the <strong>.phot</strong> file contains the raw photometry corresponding to the optimal aperture size. Again, these files are modeled very closely after the <em>.lc1</em> and <em>.wq</em> files generated by WQED.</p>
-<p>Both files start with two time columns, the first corresponding to the original times and the second corresponding to the barycentric corrected times. Both are provided in the event that you consider the barycentric corrections for your particular object to be unreliable for any reason.</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#the-lc-file">The .lc File</a></p></li>
+<li><p><a class="reference internal" href="#the-phot-file">The .phot File</a></p></li>
+<li><p><a class="reference internal" href="#the-phot2lc-log-file">The phot2lc_log File</a></p></li>
+</ul>
+<p>Upon choosing to save your light curve with &quot;W&quot; or &quot;G&quot;, phot2lc will perform the <a class="reference internal" href="barycorr.html#barycentric-corrections"><span class="std std-ref">barycentric time corrections</span></a> to each point and then provide you with three output files. The <a class="reference internal" href="#the-lc-file"><span class="std std-ref">.lc</span></a> file contains the divided light curve while the <a class="reference internal" href="#the-phot-file"><span class="std std-ref">.phot</span></a> file contains the raw photometry corresponding to the optimal aperture size. These files are modeled very closely after the <em>.lc1</em> and <em>.wq</em> files generated by WQED. The third output file is called, <a class="reference internal" href="#the-phot2lc-log-file"><span class="std std-ref">phot2lc_log.txt</span></a>, and stores information about your saved light curve which allows phot2lc to essentially restore your session for a particular object (<a class="reference internal" href="#the-phot2lc-log-file"><span class="std std-ref">more details below</span></a>).</p>
+<p>The .lc and .phot files start with two time columns, the first corresponding to the original times and the second corresponding to the barycentric corrected times. Both are provided in the event that you consider the barycentric corrections for your particular object to be unreliable for any reason.</p>
 <p>The naming convention for the files are <strong>&lt;object&gt;_&lt;obs_date&gt;.lc</strong> and <strong>&lt;object&gt;_&lt;obs_date&gt;.phot</strong>, where &lt;object&gt; is replaced by the object name and &lt;obs_date&gt; is replaced by the observation date in YYYYMMDD format.</p>
 <div class="section" id="the-lc-file">
 <h3>The .lc File<a class="headerlink" href="#the-lc-file" title="Permalink to this headline">¶</a></h3>
@@ -307,7 +314,7 @@ COMMAND LIST - Aperture Selection:
 <div class="section" id="the-phot-file">
 <h3>The .phot File<a class="headerlink" href="#the-phot-file" title="Permalink to this headline">¶</a></h3>
 <p>The .phot file also starts with a header providing some of the same information as the .lc file, and is then followed by several columns of data. The first two columns are the same as for the .lc file, providing the raw and barycentric corrected times at mid-exposure with respect to the first exposure.</p>
-<p>The remaining columns provide the sky-subtracted photometric counts for the target followed by each comparison star. The last column is always the sky column and represents the amount of background counts subtracted from the target's aperture. Sky subtraction counts are not provided for the comparison stars. The number of comparison star columns will reflect the original number of comparison stars loaded in the <em>ccd_hsp</em> or <em>MAESTRO</em> photometry files, even if they don't all get used to generate the divided light curve. However, if specific points were deleted from the divided light curve, they will also be removed from this file.</p>
+<p>The remaining columns provide the sky-subtracted photometric counts for the target followed by each comparison star. The last column is always the sky column and represents the amount of background counts subtracted from the target's aperture. Sky counts are not provided for the comparison stars. The number of comparison star columns will reflect the original number of comparison stars loaded in the <em>ccd_hsp</em> or <em>MAESTRO</em> photometry files, even if they don't all get used to generate the divided light curve. However, if specific points were deleted from the divided light curve, they will also be removed from this file.</p>
 <p>Below is an example .phot file, again showing the header followed by the first and last three rows of data:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span># Object     : G117-B15A                     # Name of Object
 # RA         : 09 24 15.27                   # Object Right Ascension
@@ -334,6 +341,26 @@ COMMAND LIST - Aperture Selection:
  15690.000   15690.173     214079    93761    27382    13946
  15705.000   15705.173     175979    78464    22928    14297
  15720.000   15720.174     166926    73647    22034    15337
+</pre></div>
+</div>
+</div>
+<div class="section" id="the-phot2lc-log-file">
+<h3>The phot2lc_log File<a class="headerlink" href="#the-phot2lc-log-file" title="Permalink to this headline">¶</a></h3>
+<p>The <em>phot2lc_log.txt</em> file saves information about the light curve extraction so that if you want to rerun phot2lc for an object, it will automatically apply the same changes that you had already made. This file is only generated if you have previously saved a light curve and includes information about which points had been deleted, what polynomial order was used for detrending, and which comparison stars had been used for division. This can save large amounts of time for users when small modifications need to be made after the original light curve extraction.</p>
+<p>In addition, this file stores each data point's raw timestamp, prior to barycentric corrections, so that the timing information is preserved. This is useful if phot2lc originally generated timestamps via the header keywords within a list of FITS files, but you would like to remove most of the FITS files post-extraction to save computer space. If a <em>phot2lc_log</em> file is present, phot2lc will preferentially use it to generate the time stamps upon execution.</p>
+<p>An example <em>phot2lc_log</em> file is shown below, which shows the header and the first and last three rows of data. The first data column provides the raw mid-exposure times relative to the first exposure, and the second column is just a boolean value where 0 = Deleted and 1 = Kept.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>#     OBJECT = G117-B15A
+# POLYNOMIAL = 3
+#      DTMID = 2018-01-26T05:06:01.500
+#      COMPS = 1+2
+#       TEXP = 15.000000
+     0.000  1
+    15.000  1
+    30.000  1
+    ...     ...
+ 15690.000  1
+ 15705.000  1
+ 15720.000  1
 </pre></div>
 </div>
 </div>
