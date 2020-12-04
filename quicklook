@@ -69,8 +69,8 @@ if (wqed) & (columns > 2):
     print('\nLightcurve is not of type WQED. Expected 2 columns, saw {}'.format(columns))
     print('Program exited.\n')
     sys.exit(1)
-if (~wqed) & (columns < 4):
-    print('\nLightcurve is not of type PHOT2LC. Expected 4 columns, saw {}'.format(columns))
+if (~wqed) & (columns < 3):
+    print('\nLightcurve is not of type PHOT2LC. Expected 3 columns, saw {}'.format(columns))
     print('Program exited.\n')
     sys.exit(1)
 
@@ -83,12 +83,8 @@ for file in filenames:
     data = np.loadtxt(file)
 
     # Parse data
-    if wqed:
-        time = data[:,0]
-        flux = data[:,1]
-    else:
-        time = data[:,1]
-        flux = data[:,2]
+    time = data[:,0]
+    flux = data[:,1]
 
 
     # Get object name
@@ -101,10 +97,10 @@ for file in filenames:
                     if "Date" in l.split("=")[0]:
                         date_obs = l.split("=")[1].split("#")[0].strip()
                 else:
-                    if "Object" in l.split(":")[0]:
-                        object_name = l.split(":")[1].split("#")[0].strip()
-                    if "# Date" in l.split(":")[0]:
-                        date_obs = l.split(":")[1].split("#")[0].strip()
+                    if "Object" in l.split("=")[0]:
+                        object_name = l.split("=")[1].split("#")[0].strip()
+                    if "# Date" in l.split("=")[0]:
+                        date_obs = l.split("=")[1].split("#")[0].strip()
             else:
                 break
 
@@ -158,12 +154,16 @@ for file in filenames:
         yupp = 1.4 * sig*1e2
     else:
         yupp = 1.2 * amax
-    ax1.set_xlim(0,12000)
+    ax1.set_xlim(0,max(farr)*1e6)
     ax1.set_ylim(0,yupp)
 
     # Add text for 4<A> sig-threshold
     threshold_text = r'$4\langle$A$\rangle = {:.3f} \%$'.format(sig*1e2)
-    ax1.text(8000,sig*1e2+0.04*yupp,threshold_text, color='C2',fontsize=10)
+    axis_to_data = ax1.transAxes + ax1.transData.inverted()
+    data_to_axis = axis_to_data.inverted()
+    points_axis = data_to_axis.transform([0,sig*1e2+0.04*yupp])
+    ax1.text(0.80,points_axis[1],threshold_text, 
+             color='C2',fontsize=10,transform=ax1.transAxes)
 
     # Add Markers for Each Frequency
     if args.prewhiten:
@@ -176,12 +176,12 @@ for file in filenames:
         # Print out Each Peaks Frequency and Amplitude
         font = {'fontname':'Bitstream Vera Sans Mono'}
         if Np > 0:
-            ax1.text(6000,1.10*amax,'Significant Peaks',fontsize=8,**font)
-            ax1.text(6000,1.09*amax,'___________________',**font)
+            ax1.text(0.45,0.92,'Significant Peaks',fontsize=8,transform=ax1.transAxes,**font)
+            ax1.text(0.45,0.91,'___________________',transform=ax1.transAxes,**font)
             for i,(f,a) in enumerate(zip(freq_vals,amp_vals)):
-                yloc = 1.0*amax - (float(i)*0.08*amax)
-                ax1.text(6000,yloc,'{}: {:6.1f} $\mu$Hz  {:5.2f} %'.format(i+1,f*1e6,a*1e2),
-                         fontsize=8,**font)
+                yloc = 0.83 - (float(i)*0.055)
+                ax1.text(0.45,yloc,'{}: {:7.1f} $\mu$Hz  {:5.2f} %'.format(i+1,f*1e6,a*1e2),
+                         fontsize=8,transform=ax1.transAxes,**font)
 
 
     # Add a title

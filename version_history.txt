@@ -323,7 +323,77 @@ Version 1.5.10 - 2020-07-12
 > Fixed bug in photfunc.py's prewhiten function which 
     calculated one more pre-whitening step than requested.
 
+
 Version 1.5.11 - 2020-07-13
 ---------------------------
 > Small bug fix in the pp_scat function within photfunc.py.
     Denominator should have been N-1, not N.
+
+
+Version 1.5.12 - 2020-08-05
+---------------------------
+> Changed .lc and .phot file format. Instead of two time
+    columns, there is now only one. The time column is
+    either the raw times or the barycentric corrected
+    times. The user has control over which output occurs
+    using the new -b (--barycorr) command line option
+    when calling phot2lc.
+
+
+Version 1.5.13 - 2020-08-07
+---------------------------
+> Updated the weldlc and quicklook programs to work 
+    properly with the newly formatted .lc file.
+> Minor modifications to the quicklook plot format.
+    The text displayed on the periodogram plots is
+    now positioned more efficiently to prevent overlap.
+
+
+Version 1.6.0 - 2020-11-15
+--------------------------
+> Added a new capability to phot2lc which allows Users
+  to perform sigma rejections when fitting a polynomial
+  to the light curve. This optimizes the fitting procedure
+  for objects which are expected to exhibit many points
+  below or above the average flux, for example objects
+  in eclipsing binaries or flare stars. The -f keyword 
+  is still available for simple polynomial fitting without
+  sigma rejections where only the polynomial degree needs
+  to be defined. A new keword, -F, is used to define the
+  sigma rejections parameters:
+	- Polymial Degree       , e.g. 3
+	- Rejection Iterations  , e.g. 10
+	- Lower Sigma Threshold , e.g. 2.5
+	- Upper Sigma Threshold , e.g. 5.0
+> Fixed the weldlc header which still indicated two time
+  time columns were present though now only one is
+  included.
+> Refined treatment of light curves which have not been
+  barycentric corrected. When corrections are not
+  performed, the .lc and .phot headers now have "None"
+  entered for the BJED value. In addition there is a 
+  headder keyword "BaryCorr" with a value of True or
+  False indicating whether corrections have been 
+  performed.
+> Related to the above point, the weldlc header looks
+  different now depending on whether the input light 
+  curve files have all been barycentric corrected or 
+  not. If they have, all of the times referencing the 
+  start of the welded light curve (T0) are in TDB time
+  scales. If they haven't, the times are instead in the
+  UTC scale, or some combination of the UTC and TDB scales. 
+  Unless specified using weldlc's new -b (--bypass) option, 
+  however, weldlc will throw an error if not ALL of the 
+  input light curves have been barycentric corrected. 
+  Regardless of whether you use the -b option, though, 
+  weldlc still works the same in the sense that it simply 
+  takes the time columns from each .lc file and concatenates 
+  them together. The only true difference is that the -b 
+  option will reference all times to the earliest MJD value 
+  found rather than the earliest BJED value.
+
+
+Version 1.6.1 through 1.6.6 - 2020-11-15
+----------------------------------------
+> Small bug fixes
+

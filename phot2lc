@@ -79,7 +79,7 @@ from matplotlib.widgets import Cursor, RectangleSelector
 # Import Custom Functions
 from phot2lc.teledat import get_telinfo
 from phot2lc.photfunc import progress_bar, print_commands
-from phot2lc.photfunc import get_time, pp_scat, poly_fit
+from phot2lc.photfunc import get_time, pp_scat
 from phot2lc.photfunc import div_lc, gen_compstr, calc_lsp
 from phot2lc.photfunc import get_loc, window_std
 
@@ -129,6 +129,8 @@ parser.add_argument('-i', '--image',type=str,default=default_image,
                     help="Whether to use a list of images, or just one.")
 parser.add_argument('-o', '--object',type=str,default=default_object,
                     help="Name of object. If None, get object from FITS header.")
+parser.add_argument('-b', '--barycorr',action='store_false',
+                    help="If invoked, do NOT perform barycentric corrections.")
 args = parser.parse_args()
 
 
@@ -183,6 +185,8 @@ else:
     print("")
     sys.exit(1)
 
+# Set the barycorr parameter
+barycorr = args.barycorr
 
 # Get Camera Noise Characteristics
 dark = teldict['dark'] # Dark Current in ADU/s/pixel
@@ -257,7 +261,8 @@ Ndat = len(phot_data[0])  # Number of data points
 # If Phot2lc has been run previously, load in the Log File
 log_exists = False
 if os.path.exists('phot2lc_log.txt'):
-    log_header = pd.read_csv('phot2lc_log.txt',header=None,nrows=5).values
+    log_header = pd.read_csv('phot2lc_log.txt',header=None,
+                              nrows=5,delimiter='?').values
     log_data = np.loadtxt('phot2lc_log.txt')
     log_exists = True
 
@@ -564,19 +569,25 @@ bx_comp.tick_params(which='both',axis='both',labelbottom=False,
 apnum = 0   # First Aperture
 # If Phot2lc has not been previously run, use default initialization
 if not log_exists:
-    deg = 0                       # No polynomial fit to start
+    polypack = (0,0,3.0,3.0)      # No polynomial fit to start
     dele_ind = []                 # No points deleted
     keep_ind = list(range(Ndat))  # Keeping all points
 # If phot2lc has been run, use the log to initialize
 # the polynomial fit and the lists of deleted/kept points
 elif log_exists:
-    deg = int(log_header[1][0].split("=")[-1].strip())
+    if len(log_header[1][0].split("=")[-1].strip()) < 5:
+        polypack = (int(log_header[1][0].split("=")[-1].strip()),0,3.0,3.0)
+    else:
+        polypack = (int(log_header[1][0].split("=")[-1].strip().split(",")[0]),
+                    int(log_header[1][0].split("=")[-1].strip().split(",")[1]),
+                    float(log_header[1][0].split("=")[-1].strip().split(",")[2]),
+                    float(log_header[1][0].split("=")[-1].strip().split(",")[3]))
     dele_ind = [i for i,x in enumerate(log_data[:,1]) if x == 0]
     keep_ind = [i for i,x in enumerate(log_data[:,1]) if x == 1]
 phot_target = phot_data[apnum][1].replace(0.0,1.0).values
 phot_comps = np.sum(phot_data[apnum][comp_select].replace(0.0,1.0).values,axis=1)
 dlc_init,dellc_init,draw_init,mod_init = div_lc(time_stamps,phot_target,phot_comps,
-                                                deg,keep_ind,dele_ind)
+                                                polypack,keep_ind,dele_ind)
 
 # Plot Light Curve
 p0, = bx_LC.plot(time_stamps[keep_ind],dlc_init,ls='-',c='w',lw=0.5,
@@ -628,7 +639,7 @@ titleb = 'Object: {}   UT-Date: {}   UT-Time: {} \n\n'.format(
 bx_LC.set_title(titleb,loc='center',y=1.23,fontsize=13,**fontb)
 
 # Add title to polynomial plot showing the poly order
-title_poly = 'Poly Order = {}'.format(deg)
+title_poly = 'Poly Order = {}'.format(polypack[0])
 bx_mod.set_title(title_poly,loc='left',fontsize=10,x=0.02,y=0.80,**fontb)
 
 # Add title to comparison star plot showing which comps are used
@@ -702,7 +713,7 @@ def update_plot(kx,ky,dx,dy,raw,mod,comp):
     bx_LC.set_title(titleb,loc='right',fontsize=13,**fontb)
 
     # Update the polynomial order title
-    title_poly = 'Poly Order = {}'.format(deg)
+    title_poly = 'Poly Order = {}'.format(polypack[0])
     bx_mod.set_title(title_poly,loc='left',fontsize=10,x=0.02,y=0.80,**fontb)
 
     # Update the comparison star title
@@ -765,7 +776,7 @@ def toggle_zoom(show=True):
         toggle_zoom.RS.set_active(True)
 
 # Function to update the divided light curves
-def dlc_update(kx,ky,dx,dy,degree,aper):
+def dlc_update(kx,ky,dx,dy,polyinfo,aper):
     global bx_LC,p0,p1,p2,p3,p4
     global dele_ind,keep_ind,comp_select,show_delps
 
@@ -777,7 +788,7 @@ def dlc_update(kx,ky,dx,dy,degree,aper):
     phot_target = phot_data[aper][1].replace(0.0,1.0).values
     phot_comps = np.sum(phot_data[aper][comp_select].replace(0.0,1.0).values,axis=1)
     klc,dlc,kraw,kmod = div_lc(time_stamps,phot_target,phot_comps,
-                               degree,keep_ind,dele_ind)
+                               polyinfo,keep_ind,dele_ind)
 
     # Update the figure
     update_plot(kx,klc,dx,dlc,kraw,kmod,phot_comps[keep_ind])
@@ -787,7 +798,7 @@ def dlc_update(kx,ky,dx,dy,degree,aper):
 
 # Function for Garbage Selector Rectangle to Call
 def garbage_select(eclick, erelease):
-    global apnum,bx_LC,p0,p1,p2,p3,p4,num_del,deg
+    global apnum,bx_LC,p0,p1,p2,p3,p4,num_del,polypack
     global keep_x,keep_y,keep_ind,zoomed
     global dele_x,dele_y,dele_ind,show_delps
 
@@ -821,7 +832,8 @@ def garbage_select(eclick, erelease):
 
         # Update divided light curve and plot
         keep_y,dele_y,keep_ind,dele_ind = dlc_update(keep_x,keep_y,
-                                                     dele_x,dele_y,deg,apnum)
+                                                     dele_x,dele_y,
+                                                     polypack,apnum)
 
         # Deactivate the garbage selector
         toggle_garbage()
@@ -831,7 +843,7 @@ def garbage_select(eclick, erelease):
 
 # Function for Garbage Selector Rectangle to Call
 def reverse_garbage_select(eclick, erelease):
-    global apnum,bx_LC,p0,p1,p2,p3,p4,num_del,deg
+    global apnum,bx_LC,p0,p1,p2,p3,p4,num_del,polypack
     global keep_x,keep_y,keep_ind,zoomed
     global dele_x,dele_y,dele_ind,show_delps
 
@@ -865,7 +877,8 @@ def reverse_garbage_select(eclick, erelease):
 
         # Update divided light curve and plot
         keep_y,dele_y,keep_ind,dele_ind = dlc_update(keep_x,keep_y,
-                                                     dele_x,dele_y,deg,apnum)
+                                                     dele_x,dele_y,
+                                                     polypack,apnum)
 
         # Deactivate the garbage selector
         toggle_reverse_garbage()
@@ -894,7 +907,7 @@ def zoom_select(eclick, erelease):
 
 # Function for sigma clipping data
 def sigclip_data(kx,ky,dx,dy,siglow,sigupp,dw):
-    global apnum,bx_LC,p0,p1,p2,p3,p4,num_del,deg
+    global apnum,bx_LC,p0,p1,p2,p3,p4,num_del,polypack
     global keep_x,keep_y,keep_ind,zoomed
     global dele_x,dele_y,dele_ind,show_delps
     
@@ -932,7 +945,7 @@ def sigclip_data(kx,ky,dx,dy,siglow,sigupp,dw):
     # Update divided light curve and plot
     keep_y,dele_y,keep_ind,dele_ind = dlc_update(keep_x,keep_y,
                                                  dele_x,dele_y,
-                                                 deg,apnum)
+                                                 polypack,apnum)
 
     return
 
@@ -943,7 +956,7 @@ def sigclip_data(kx,ky,dx,dy,siglow,sigupp,dw):
 # the interactive options
 
 def on_event_b(event):
-    global apnum,bx_LC,p0,p1,p2,p3,p4,num_del,deg
+    global apnum,bx_LC,p0,p1,p2,p3,p4,num_del,polypack
     global keep_x,keep_y,keep_ind,comp_select,grid_search
     global dele_x,dele_y,del_ind,show_delps,zoomed
 
@@ -964,7 +977,8 @@ def on_event_b(event):
 
             # Update divided light curve and plot
             keep_y,dele_y,keep_ind,dele_ind = dlc_update(keep_x,keep_y,
-                                                         dele_x,dele_y,deg,apnum)
+                                                         dele_x,dele_y,
+                                                         polypack,apnum)
 
     # Add ALL deleted points back to the plot
     if event.key == 'A':
@@ -982,7 +996,8 @@ def on_event_b(event):
 
             # Update divided light curve and plot
             keep_y,dele_y,keep_ind,dele_ind = dlc_update(keep_x,keep_y,
-                                                         dele_x,dele_y,deg,apnum)
+                                                         dele_x,dele_y,
+                                                         polypack,apnum)
 
     # Delete a single point from the light curve
     if event.key == 'd':
@@ -999,7 +1014,8 @@ def on_event_b(event):
 
             # Update divided light curve and plot
             keep_y,dele_y,keep_ind,dele_ind = dlc_update(keep_x,keep_y,
-                                                         dele_x,dele_y,deg,apnum)
+                                                         dele_x,dele_y,
+                                                         polypack,apnum)
 
     # Toggle the display of deleted points
     if event.key == 's':
@@ -1009,9 +1025,11 @@ def on_event_b(event):
             show_delps=False
         # Update divided light curve and plot
         keep_y,dele_y,keep_ind,dele_ind = dlc_update(keep_x,keep_y,
-                                                     dele_x,dele_y,deg,apnum)
+                                                     dele_x,dele_y,
+                                                     polypack,apnum)
 
-    # Fit a Polynomial to the light curve (excludes deleted points)
+    # Fit a Polynomial to the light curve WITHOUT
+    # performing any sigma-rejection iterations (excludes deleted points)
     if event.key == 'f':
         # First Deactivate Garbage/Zoom Boxes if Active
         if toggle_garbage.RS.active:
@@ -1022,12 +1040,53 @@ def on_event_b(event):
             toggle_zoom()
 
         # Ask for new degree value on command line
-        deg_str = input('New Polynomial Degree: ') 
+        print("\nFitting Polynomial WITHOUT Sigma Rejections")
+        deg_str = input('Polynomial Degree: ') 
         deg = int(deg_str)
+
+        # Create the polynomial pack with zero rejection iterations
+        # polypack = (polynomial degree, 
+        #             rejection iterations, 
+        #             lower sigma, 
+        #             upper sigma)
+        polypack = (deg,0,3.,3.)
 
         # Update divided light curve & plot
         keep_y,dele_y,keep_ind,dele_ind = dlc_update(keep_x,keep_y,
-                                                     dele_x,dele_y,deg,apnum)
+                                                     dele_x,dele_y,polypack,apnum)
+
+    # Fit a Polynomial to the light curve WITH
+    # performing any sigma-rejection iterations (excludes deleted points)
+    if event.key == 'F':
+        # First Deactivate Garbage/Zoom Boxes if Active
+        if toggle_garbage.RS.active:
+            toggle_garbage()
+        if toggle_reverse_garbage.RS.active:
+            toggle_reverse_garbage()
+        if toggle_zoom.RS.active:
+            toggle_zoom()
+
+        # Ask for new degree value on command line
+        print("\nFitting Polynomial WITH Sigma Rejections")
+        deg_str = input('Polynomial Degree    : ') 
+        nrej_str = input('Rejection Iterations : ')
+        siglow_str = input('Lower Sigma Threshold: ')
+        sigupp_str = input('Upper Sigma Threshold: ')
+        deg = int(deg_str)
+        nrej = int(nrej_str)
+        lower_sig = float(siglow_str)
+        upper_sig = float(sigupp_str)
+
+        # Create the polynomial pack with zero rejection iterations
+        # polypack = (polynomial degree, 
+        #             rejection iterations, 
+        #             lower sigma, 
+        #             upper sigma)
+        polypack = (deg,nrej,lower_sig,upper_sig)
+
+        # Update divided light curve & plot
+        keep_y,dele_y,keep_ind,dele_ind = dlc_update(keep_x,keep_y,
+                                                     dele_x,dele_y,polypack,apnum)
 
     # Choose which comparison stars to use
     if event.key == 'c':
@@ -1057,7 +1116,8 @@ def on_event_b(event):
 
             # Update divided light curve & plot
             keep_y,dele_y,keep_ind,dele_ind = dlc_update(keep_x,keep_y,
-                                                         dele_x,dele_y,deg,apnum)
+                                                         dele_x,dele_y,
+                                                         polypack,apnum)
 
     # Move to previous aperture size
     if event.key == 'v':
@@ -1067,7 +1127,8 @@ def on_event_b(event):
 
         # Update divided light curve & plot
         keep_y,dele_y,keep_ind,dele_ind = dlc_update(keep_x,keep_y,
-                                                     dele_x,dele_y,deg,apnum)
+                                                     dele_x,dele_y,
+                                                     polypack,apnum)
 
     # Move to next aperture size
     if event.key == 'w':
@@ -1076,7 +1137,8 @@ def on_event_b(event):
             apnum += 1
         # Update divided light curve & plot
         keep_y,dele_y,keep_ind,dele_ind = dlc_update(keep_x,keep_y,
-                                                     dele_x,dele_y,deg,apnum)
+                                                     dele_x,dele_y,
+                                                     polypack,apnum)
 
     # Draw box to delete points inside
     if event.key == 'g':
@@ -1239,7 +1301,7 @@ for i in range(Nf):
     # Calculate divided LC and point-2-point scatter
     phot_t = phot_data[i][1].replace(0.0,1.0).values
     phot_c = np.sum(phot_data[i][comp_select].replace(0.0,1.0).values,axis=1)
-    lc,_,_,_ = div_lc(time_stamps,phot_t,phot_c,deg,keep_ind,dele_ind)
+    lc,_,_,_ = div_lc(time_stamps,phot_t,phot_c,polypack,keep_ind,dele_ind)
     pp = pp_scat(lc)
     lc_all.append(lc)
     pp_all.append(pp*1e2)
@@ -1269,7 +1331,7 @@ if grid_search:
         for j in range(Nf):
             phot_t = phot_data[j][1].replace(0.0,1.0).values
             phot_c = np.sum(phot_data[j][all_combs[i]].replace(0.0,1.0).values,axis=1)
-            lc,_,_,_ = div_lc(time_stamps,phot_t,phot_c,deg,keep_ind,dele_ind)
+            lc,_,_,_ = div_lc(time_stamps,phot_t,phot_c,polypack,keep_ind,dele_ind)
             pp = pp_scat(lc)
             lc_aper.append(lc)
             pp_aper.append(pp*1e2)
@@ -1288,7 +1350,7 @@ if grid_search:
     for i in range(Nf):
         phot_t = phot_data[i][1].replace(0.0,1.0).values
         phot_c = np.sum(phot_data[i][all_combs[ind_comb_min]].replace(0.0,1.0).values,axis=1)
-        lc,_,_,_ = div_lc(time_stamps,phot_t,phot_c,deg,keep_ind,dele_ind)
+        lc,_,_,_ = div_lc(time_stamps,phot_t,phot_c,polypack,keep_ind,dele_ind)
         pp = pp_scat(lc)
         pp_all_grid.append(pp*1e2)
 
@@ -1584,7 +1646,6 @@ ra_string = tcoord.to_string('hmsdms',sep=" ")[0:11]
 de_string = tcoord.to_string('hmsdms',sep=" ")[12:]
 
 # Calculate BJD times using Astropy Time & TimeDelta objects
-print('\nCalculating barycentric corrections...')
 tkeep = time_stamps[keep_ind]              # All kept timestamps
 st = dt_zero_mid.to_value('isot')          # UTC date-time at mid-exposure T0
 st_mjd = dt_zero_mid.to_value('mjd')       # UTC MJD at mid-exposure T0
@@ -1592,11 +1653,16 @@ t0 = Time(st,scale='utc',format='isot',    # Astropy mid-exposure Start time
           location=loc)                    
 td = TimeDelta(tkeep,format='sec')         # Time deltas for kept points
 t = t0 + td                                # Full list of Astropy mid-exposure times
-ltt_bary_t0 = t0.light_travel_time(tcoord) # Light travel time to barycenter for T0
-ltt_bary = t.light_travel_time(tcoord)     # Light travel time to barycenter for all kept times
-tbjd = t.tdb.jd + ltt_bary.jd              # Barycentric times (rescaled UTC + LTT)
-bjdref = t0.tdb.jd + ltt_bary_t0           # BJD at mid-exposure T0
-tbjd_sec = (tbjd - bjdref.value) * 86400.0 # BJD converted to seconds since reftime
+
+if barycorr:
+    print('\nCalculating barycentric corrections...')
+    ltt_bary_t0 = t0.light_travel_time(tcoord) # Light travel time to barycenter for T0
+    ltt_bary = t.light_travel_time(tcoord)     # Light travel time to barycenter for all kept times
+    tbjd = t.tdb.jd + ltt_bary.jd              # Barycentric times (rescaled UTC + LTT)
+    bjdref = t0.tdb.jd + ltt_bary_t0           # BJD at mid-exposure T0
+    tbjd_sec = (tbjd - bjdref.value) * 86400.0 # BJD converted to seconds since reftime
+else:
+    print('\nBarycentric corrections skipped...')
 
 # Function to Calculate Error Bars and S/N
 def calc_err(phot,aper):
@@ -1651,54 +1717,63 @@ else:
     snr,_ = calc_err(phot_data[ind_aper[ind_comb_min]].iloc[keep_ind,:].values,opt_ap)
     err = 1./snr
 
+# Define the BJED header entry beforehand:
+if barycorr:
+    bjed_entry = '\nBJED       = {:<30.9f}# Mid Exp. Barycentric Julian Date'.format(bjdref.value)
+else:
+    bjed_entry = '\nBJED       = {:30s}# Mid Exp. Barycentric Julian Date'.format('None')
+
 # Header for the raw photometry file
-rawphot_header = 'Object     : {:30s}# Name of Object'.format(obj_name) + \
-    '\nRA         : {:30s}# Object Right Ascension'.format(ra_string) + \
-    '\nDec        : {:30s}# Object Declination'.format(de_string) + \
-    '\nTelescope  : {:30s}# Name of Telescope'.format(telescope) + \
-    '\nInstrument : {:30s}# Name of Instrument'.format(instrument) + \
-    '\nTeleCode   : {:30s}# Teledat Code Name'.format(telcode) + \
-    '\nDate       : {:30s}# Mid-Exp. UTC Start Date'.format(st.split("T")[0]) + \
-    '\nTime       : {:30s}# Mid-Exp. UTC Start Time'.format(st.split("T")[1]) + \
-    '\nMJD        : {:<30.9f}# Mid Exposure UTC MJD Start'.format(st_mjd) + \
-    '\nExptime    : {:<30.6f}# Exposure Time (s)'.format(texp) + \
-    '\nFilter     : {:30s}# Filter Name'.format(filter_name) + \
-    '\nBJED       : {:<30.9f}# Mid Exp. Barycentric Julian Date'.format(bjdref.value) + \
-    '\nApPhot     : {:30s}# Photometry Program'.format(source_dict[psource]) + \
-    '\nOrigFile   : {:30s}# Source Photometry Filename'.format(phot_names[opt_ind]) + \
-    '\nApRadius   : {:<30.2f}# Aperture Radius (pixels)'.format(opt_ap) + \
-    '\nNkeep      : {:<30d}# Number of points in light curve '.format(len(keep_ind)) + \
-    '\nNdelete    : {:<30d}# Number of points removed'.format(len(dele_ind)) + \
-    '\nColumns: Raw T-mid (s), BaryCorr T-mid (s), Target, Comp(s), Sky' 
+rawphot_header = 'Object     = {:30s}# Name of Object'.format(obj_name) + \
+    '\nRA         = {:30s}# Object Right Ascension'.format(ra_string) + \
+    '\nDec        = {:30s}# Object Declination'.format(de_string) + \
+    '\nTelescope  = {:30s}# Name of Telescope'.format(telescope) + \
+    '\nInstrument = {:30s}# Name of Instrument'.format(instrument) + \
+    '\nTeleCode   = {:30s}# Teledat Code Name'.format(telcode) + \
+    '\nDate       = {:30s}# Mid-Exp. UTC Start Date'.format(st.split("T")[0]) + \
+    '\nTime       = {:30s}# Mid-Exp. UTC Start Time'.format(st.split("T")[1]) + \
+    '\nMJD        = {:<30.9f}# Mid Exposure UTC MJD Start'.format(st_mjd) + \
+    '\nExptime    = {:<30.6f}# Exposure Time (s)'.format(texp) + \
+    '\nFilter     = {:30s}# Filter Name'.format(filter_name) + \
+    '{}'.format(bjed_entry) + \
+    '\nBarycorr   = {:30s}# Barycentric Corrections Applied?'.format(str(barycorr)) + \
+    '\nApPhot     = {:30s}# Photometry Program'.format(source_dict[psource]) + \
+    '\nOrigFile   = {:30s}# Source Photometry Filename'.format(phot_names[opt_ind]) + \
+    '\nApRadius   = {:<30.2f}# Aperture Radius (pixels)'.format(opt_ap) + \
+    '\nNkeep      = {:<30d}# Number of points in light curve '.format(len(keep_ind)) + \
+    '\nNdelete    = {:<30d}# Number of points removed'.format(len(dele_ind)) + \
+    '\nColumns: Time (s), Target, Comparisons, Sky' 
 
 # Header for the final lightcurve
-lcfin_header = 'Object     : {:30s}# Name of Object'.format(obj_name) + \
-    '\nRA         : {:30s}# Object Right Ascension'.format(ra_string) + \
-    '\nDec        : {:30s}# Object Declination'.format(de_string) + \
-    '\nTelescope  : {:30s}# Name of Telescope'.format(telescope) + \
-    '\nInstrument : {:30s}# Name of Instrument'.format(instrument) + \
-    '\nTeleCode   : {:30s}# Teledat Code Name'.format(telcode) + \
-    '\nDate       : {:30s}# Mid-Exposure UTC Date at T0'.format(st.split("T")[0]) + \
-    '\nTime       : {:30s}# Mid-Exposure UTC Time at T0'.format(st.split("T")[1]) + \
-    '\nMJD        : {:<30.9f}# Mid-Exposure UTC MJD at T0'.format(st_mjd) + \
-    '\nExptime    : {:<30.6f}# Exposure Time (s)'.format(texp) + \
-    '\nFilter     : {:30s}# Filter Name'.format(filter_name) + \
-    '\nBJED       : {:<30.9f}# Mid-Exposure TDB JD at T0'.format(bjdref.value) + \
-    '\nApPhot     : {:30s}# Photometry Program'.format(source_dict[psource]) + \
-    '\nOrigFile   : {:30s}# Source Photometry Filename'.format(phot_names[opt_ind]) + \
-    '\nApRadius   : {:<30.2f}# Aperture Radius (pixels)'.format(opt_ap) + \
-    '\nAvgScatter : {:<30.2f}# Avg. Point-to-Point Scatter (%)'.format(opt_pp) + \
-    '\nComps      : {:<30d}# Comparison stars used'.format(comp_number) + \
-    '\nPolyOrder  : {:<30d}# Degree of Polynomial Division'.format(deg) + \
-    '\nNkeep      : {:<30d}# Number of points in light curve '.format(len(keep_ind)) + \
-    '\nNdelete    : {:<30d}# Number of points removed'.format(len(dele_ind)) + \
-    '\nAuthor     : {:30s}# Author of this light curve'.format(author) + \
-    '\nCreatedOn  : {:30s}# Date created'.format(Time.now().to_value("iso")) + \
-    '\nColumns: Raw T-mid (s), BaryCorr T-mid (s), Rel. Flux, Rel. Flux Error' 
+lcfin_header = 'Object     = {:30s}# Name of Object'.format(obj_name) + \
+    '\nRA         = {:30s}# Object Right Ascension'.format(ra_string) + \
+    '\nDec        = {:30s}# Object Declination'.format(de_string) + \
+    '\nTelescope  = {:30s}# Name of Telescope'.format(telescope) + \
+    '\nInstrument = {:30s}# Name of Instrument'.format(instrument) + \
+    '\nTeleCode   = {:30s}# Teledat Code Name'.format(telcode) + \
+    '\nDate       = {:30s}# Mid-Exposure UTC Date at T0'.format(st.split("T")[0]) + \
+    '\nTime       = {:30s}# Mid-Exposure UTC Time at T0'.format(st.split("T")[1]) + \
+    '\nMJD        = {:<30.9f}# Mid-Exposure UTC MJD at T0'.format(st_mjd) + \
+    '\nExptime    = {:<30.6f}# Exposure Time (s)'.format(texp) + \
+    '\nFilter     = {:30s}# Filter Name'.format(filter_name) + \
+    '{}'.format(bjed_entry) + \
+    '\nBarycorr   = {:30s}# Barycentric Corrections Applied?'.format(str(barycorr)) + \
+    '\nApPhot     = {:30s}# Photometry Program'.format(source_dict[psource]) + \
+    '\nOrigFile   = {:30s}# Source Photometry Filename'.format(phot_names[opt_ind]) + \
+    '\nApRadius   = {:<30.2f}# Aperture Radius (pixels)'.format(opt_ap) + \
+    '\nAvgScatter = {:<30.2f}# Avg. Point-to-Point Scatter (%)'.format(opt_pp) + \
+    '\nComps      = {:<30d}# Comparison stars used'.format(comp_number) + \
+    '\nPolyOrder  = {:<30d}# Degree of Polynomial Division'.format(polypack[0]) + \
+    '\nNkeep      = {:<30d}# Number of points in light curve '.format(len(keep_ind)) + \
+    '\nNdelete    = {:<30d}# Number of points removed'.format(len(dele_ind)) + \
+    '\nAuthor     = {:30s}# Author of this light curve'.format(author) + \
+    '\nCreatedOn  = {:30s}# Date created'.format(Time.now().to_value("iso")) + \
+    '\nColumns: Time (s), Relative Flux, Relative Flux Error' 
 
 # Header for the raw photometry file
 log_header = '    OBJECT = {}'.format(obj_name) + \
-             '\nPOLYNOMIAL = {}'.format(deg) + \
+             '\nPOLYNOMIAL = {},{},{:.2f},{:.2f}'.format(polypack[0],polypack[1],
+                                                         polypack[2],polypack[3]) + \
              '\n     DTMID = {}'.format(st) + \
              '\n     COMPS = {}'.format(comp_ids) + \
              '\n      TEXP = {:.6f}'.format(texp)
@@ -1706,8 +1781,10 @@ log_header = '    OBJECT = {}'.format(obj_name) + \
 # Generate output arrays (use save_user flag to choose appropriate lightcurve)
 Ndat_all = len(time_stamps)
 Ndat_keep = len(keep_ind)
-rawtimes_saved = np.reshape(tkeep,(Ndat_keep,1))
-bjdtimes_saved = np.reshape(tbjd_sec,(Ndat_keep,1))
+if barycorr:
+    bjdtimes_saved = np.reshape(tbjd_sec,(Ndat_keep,1))
+else:
+    rawtimes_saved = np.reshape(tkeep,(Ndat_keep,1))
 orig_times_logged = np.reshape(time_stamps,(Ndat_all,1))
 del_log = np.reshape(np.zeros(Ndat_all),(Ndat_all,1))
 del_log[keep_ind] += 1 # Set to 1 for points which are kept (0 means deleted)
@@ -1715,32 +1792,50 @@ lcerr_saved = np.reshape(err,(Ndat_keep,1))
 if save_user:
     if psource == 'hsp':
         phot_saved = phot_data[opt_ind].iloc[keep_ind,:].values
-        output_phot = np.concatenate((rawtimes_saved,bjdtimes_saved,phot_saved),axis=1)
+        if barycorr:
+            output_phot = np.concatenate((bjdtimes_saved,phot_saved),axis=1)
+        else:
+            output_phot = np.concatenate((rawtimes_saved,phot_saved),axis=1)
     elif psource == 'mae':
         phot_saved = phot_data[opt_ind].iloc[keep_ind,0:2*Nobj-1:2].values
         sky_saved = np.reshape(phot_data[opt_ind].iloc[keep_ind,1].values,(Ndat_keep,1))
-        output_phot = np.concatenate((rawtimes_saved,bjdtimes_saved,phot_saved,sky_saved),axis=1)
+        if barycorr:
+            output_phot = np.concatenate((bjdtimes_saved,phot_saved,sky_saved),axis=1)
+        else:
+            output_phot = np.concatenate((rawtimes_saved,phot_saved,sky_saved),axis=1)
     lc_saved = np.reshape(lc_all[ind_ppmin],(Ndat_keep,1))
-    output_lc = np.concatenate((rawtimes_saved,bjdtimes_saved,lc_saved,lcerr_saved),axis=1)
+    if barycorr:
+        output_lc = np.concatenate((bjdtimes_saved,lc_saved,lcerr_saved),axis=1)
+    else:
+        output_lc = np.concatenate((rawtimes_saved,lc_saved,lcerr_saved),axis=1)
     output_log = np.concatenate((orig_times_logged,del_log),axis=1)
 else:
     if psource == 'hsp':
         phot_saved = phot_data[opt_ind].iloc[keep_ind,:].values
-        output_phot = np.concatenate((rawtimes_saved,bjdtimes_saved,phot_saved),axis=1)
+        if barycorr:
+            output_phot = np.concatenate((bjdtimes_saved,phot_saved),axis=1)
+        else:
+            output_phot = np.concatenate((rawtimes_saved,phot_saved),axis=1)
     elif psource == 'mae':
         phot_saved = phot_data[opt_ind].iloc[keep_ind,0:2*Nobj-1:2].values
         sky_saved = np.reshape(phot_data[opt_ind].iloc[keep_ind,1].values,(Ndat_keep,1))
-        output_phot = np.concatenate((rawtimes_saved,bjdtimes_saved,phot_saved,sky_saved),axis=1)
+        if barycorr:
+            output_phot = np.concatenate((bjdtimes_saved,phot_saved,sky_saved),axis=1)
+        else:
+            output_phot = np.concatenate((rawtimes_saved,phot_saved,sky_saved),axis=1)
     lc_saved = np.reshape(lc_comb[ind_comb_min],(Ndat_keep,1))
-    output_lc = np.concatenate((rawtimes_saved,bjdtimes_saved,lc_saved,lcerr_saved),axis=1)
+    if barycorr:
+        output_lc = np.concatenate((bjdtimes_saved,lc_saved,lcerr_saved),axis=1)
+    else:
+        output_lc = np.concatenate((rawtimes_saved,lc_saved,lcerr_saved),axis=1)
     output_log = np.concatenate((orig_times_logged,del_log),axis=1)
 
 
 # Create the format strings for raw photometry and final lightcurve  
-rawphot_format = '%10.3f  %10.3f  '
+rawphot_format = '%10.3f  '
 for i in range(Nobj+1):
     rawphot_format += '  %7.0f'
-lcfin_format = '%10.3f  %10.3f  %9.6f  %9.6f'
+lcfin_format = '%10.3f  %9.6f  %9.6f'
 log_format = '%10.3f  %i'
 
 # Save the lightcurve + header info to file

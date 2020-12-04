@@ -149,8 +149,10 @@ def pp_scat(ydata):
     pp_avg = (sum((ydata[0:-1]-ydata[1:])**2)/(Nv-1))**(0.5)
     return pp_avg
 
-# Function to calculate a polynomial fit to a lightcurve
-def poly_fit(x,y,mu,indk,indd,order):
+
+###########################################################
+####    A simple polynimal fit w/ sigma-rejections     ####
+def poly_sigfit(x,y,mu,indk,indd,order,nrej,siglow,sigupp):
 
     # First replace any infinite values with the mean
     # or else the resulting fit will be all NaNs
@@ -158,25 +160,53 @@ def poly_fit(x,y,mu,indk,indd,order):
 
     kmodel = np.zeros(len(x[indk]))
     dmodel = np.zeros(len(x[indd]))
-    try:
-        p = np.polyfit(x[indk],y[indk],order)
-    except:
+
+    # No sigma rejections
+    if nrej <= 0:
+        kmodel = np.zeros(len(x[indk]))
+        dmodel = np.zeros(len(x[indd]))
+        try:
+            p = np.polyfit(x[indk],y[indk],order)
+        except:
+            return kmodel,dmodel
+        kmodel = np.polyval(p,x[indk])
+        dmodel = np.polyval(p,x[indd])
         return kmodel,dmodel
-    for i in range(order+1):
-        kmodel += p[i]*(x[indk]**(order-i))
-        dmodel += p[i]*(x[indd]**(order-i))
-    return kmodel,dmodel
+    else:
+        # Perform fits and sigma rejections
+        fit_x = x[indk]
+        fit_y = y[indk]
+        for i in range(nrej):
+            pars = np.polyfit(fit_x,fit_y,deg=order)
+            mod = np.polyval(pars,fit_x)
+            sigma = np.sqrt(sum((mod-fit_y)**2)/(len(fit_y)-1.0))
+            residual = fit_y - mod
+            fit_x = fit_x[(residual > -siglow*sigma) & (residual < sigupp*sigma)]
+            fit_y = fit_y[(residual > -siglow*sigma) & (residual < sigupp*sigma)]
+
+        # After sigma rejections, generate final model
+        kmodel = np.polyval(pars,x[indk])
+        dmodel = np.polyval(pars,x[indd])
+        return kmodel,dmodel
+
 
 # Function which returns the normalized, divided light curve
-def div_lc(time,target,comps,order,indk,indd):
+def div_lc(time,target,comps,polyinfo,indk,indd):
     # Create raw divided light curvre
     div1 = target/comps
     mean_div1 = np.nanmean(div1[~np.isinf(div1)])
     mean_targ = np.nanmean(target)
     dlc_raw = div1/mean_div1*mean_targ
+
+    # Parse the polyinfo input
+    poly_order = polyinfo[0]
+    poly_nrej = polyinfo[1]
+    poly_siglow = polyinfo[2]
+    poly_sigupp = polyinfo[3]
     
     # Generate a polynmial fit
-    modelk,modeld = poly_fit(time,dlc_raw,mean_targ,indk,indd,order)
+    modelk,modeld = poly_sigfit(time,dlc_raw,mean_targ,indk,indd,
+                                poly_order,poly_nrej,poly_siglow,poly_sigupp)
 
     # Generate arrays to return
     dlc_mz_keep = dlc_raw[indk]/modelk - 1.0  # Mean-Zero'd DLC (Kept)
@@ -334,6 +364,7 @@ def prewhiten(time,flux,Npw=1,fmin=500,fmax=100000):
     # Get time sampling and duration
     texp = np.median(time[1:] - time[:-1])
     delt = time[-1] - time[0]
+    ftol = (0.5/delt)*1e6 # 1/2T frequency resolution in microhertz
 
     # Calculate the raw Periodogram
     farr,lsp_raw = calc_lsp(time,flux)
@@ -345,6 +376,7 @@ def prewhiten(time,flux,Npw=1,fmin=500,fmax=100000):
 
     flux_fit = np.copy(flux)  # Make a copy of flux which will be pre-whitened
     old_names = []
+    freq_vals = []
     for i in range(Npw):
 
         # Calculate Lomb-Scargle Periodogram (LSP)
