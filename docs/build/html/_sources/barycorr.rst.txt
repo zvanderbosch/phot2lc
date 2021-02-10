@@ -3,7 +3,7 @@ Barycentric Corrections
 
 While most of what phot2lc does is relatively straightforward, the barycentric time corrections are perhaps the most important and easily mishandled part of this program. phot2lc uses the `Astropy Time package <https://docs.astropy.org/en/stable/time/#>`_ to perform point-by-point barycentric time corrections which account for the observed object's sky coordinates, the Earth location of the observatory from which the observations were made, the date and time at which the observations were made, and the number of leap seconds that have occurred. If any of these four pieces of information are incorrect, the barycentric time corrections will be unreliable. The sources for each piece of information are listed below:
 
-* **Object Coordinates** come from stars.dat 
+* **Object Coordinates** come from the stars.dat file
 * **Observatory Location** is identified using the telescope code (e.g. mcd2, lco1, pjmo, etc.)
 * **Observation Date-Time** comes from the image time stamps
 * **Leap Seconds** are now `automatically checked and updated by Astropy (v4.0 or later) <https://docs.astropy.org/en/stable/whatsnew/4.0.html#whatsnew-4-0-time-leap-seconds>`_

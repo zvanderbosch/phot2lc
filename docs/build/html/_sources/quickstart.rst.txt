@@ -94,7 +94,8 @@ Similar to WQED, commands in phot2lc are executed via keyboard inputs. After sta
     - Type 'Z' to restore zoom to original.
     - Type 'x' to perform sigma clipping.
     - Type 's' to toggle the display of deleted points.
-    - Type 'f' to choose the degree of polynomial fit.
+    - Type 'f' to perform a polynomial fit, WITHOUT sigma rejections.
+    - Type 'F' to perform a polynomial fit, WITH sigma rejections."
     - Type 'c' to choose comparison stars for division.
     - Type 'v' to move to previous aperture size.
     - Type 'w' to move to next aperture size.
@@ -111,8 +112,6 @@ Similar to WQED, commands in phot2lc are executed via keyboard inputs. After sta
     - Type 'G' to save lightcurve with *GRID* Selection.
 
 The "Divided Light Curve" command list provides your options when you are working within the *Divided Light Curve* window. Within the *First Image* and *Raw Photometry* windows, the only commands available are "?", "Q", "W", and "G". The other command list for aperture selection is for the next window that appears if you decide to continue light curve extraction by typing the "W" or "G" keys when working in the *Divided Light Curve* window.
-
-For more detailed explanations of each command, see the PDF version of the phot2lc user guide (coming soon!).
 
 
 Aperture Selection
@@ -158,46 +157,47 @@ The naming convention for the files are **<object>_<obs_date>.lc** and **<object
 The .lc File
 ~~~~~~~~~~~~
 
-The .lc file consists of a header followed by four columns of data. The header provides information with regards to both the observations and the light curve extraction. The four columns are (1) the raw mid exposure times in seconds relative to the first exposure, (2) the barycentric corrected mid-exposure times relative to the first exposure, (3) the relative flux values, and (4) the error on the relative flux. Below is an example .lc1 file showing the header and the first and last three rows of data:
+The .lc file consists of a header followed by three columns of data. The header provides information with regards to both the observations and the light curve extraction. The three columns are (1) the mid-exposure times in seconds relative to the first exposure, (2) the relative flux values, and (3) the error on the relative flux. Below is an example .lc1 file showing the header and the first and last three rows of data:
 
 .. code-block:: text
 
-  # Object     : G117-B15A                     # Name of Object
-  # RA         : 09 24 15.27                   # Object Right Ascension
-  # Dec        : +35 16 51.3                   # Object Declination
-  # Telescope  : McDonald 2.1m                 # Name of Telescope
-  # Instrument : ProEM                         # Name of Instrument
-  # TeleCode   : mcd2                          # Teledat Code Name
-  # Date       : 2018-01-26                    # Mid-Exposure UTC Date at T0
-  # UTC        : 05:06:01.500                  # Mid-Exposure UTC Time at T0
-  # MJD        : 58144.212517361               # Mid-Exposure UTC MJD at T0
-  # Exptime    : 15.000000                     # Exposure Time (s)
-  # Filter     : BG40                          # Filter Name
-  # BJED       : 2458144.718681479             # Mid-Exposure TDB JD at T0
-  # ApPhot     : ccd_hsp                       # Photometry Program
-  # OrigFile   : runbase6.                     # Source Photometry Filename
-  # ApRadius   : 6.00                          # Aperture Radius (pixels)
-  # AvgScatter : 1.25                          # Avg. Point-to-Point Scatter (%)
-  # Comps      : 2                             # Comparison stars used
-  # PolyOrder  : 3                             # Degree of Polynomial Division
-  # Nkeep      : 1049                          # Number of points in light curve 
-  # Ndelete    : 0                             # Number of points removed
-  # Author     : Zach Vanderbosch              # Author of this light curve
-  # CreatedOn  : 2020-07-12 21:34:07.518       # Date created
-  # Columns: Raw T-mid (s), BaryCorr T-mid (s), Rel. Flux, Rel. Flux Error
-       0.000       0.000  -0.031284   0.002743
-      15.000      15.000  -0.030957   0.002611
-      30.000      30.000  -0.029607   0.002626
-      ...         ...        ...        ...
-   15690.000   15690.173  -0.011376   0.002271
-   15705.000   15705.173  -0.029081   0.002532
-   15720.000   15720.174  -0.024124   0.002615
+  # Object     = G117-B15A                     # Name of Object
+  # RA         = 09 24 15.27                   # Object Right Ascension
+  # Dec        = +35 16 51.3                   # Object Declination
+  # Telescope  = McDonald 2.1m                 # Name of Telescope
+  # Instrument = ProEM                         # Name of Instrument
+  # TeleCode   = mcd2                          # Teledat Code Name
+  # Date       = 2018-01-26                    # Mid-Exposure UTC Date at T0
+  # Time       = 05:06:01.500                  # Mid-Exposure UTC Time at T0
+  # MJD        = 58144.212517361               # Mid-Exposure UTC MJD at T0
+  # Exptime    = 15.000000                     # Exposure Time (s)
+  # Filter     = BG40                          # Filter Name
+  # BJED       = 2458144.718681479             # Mid Exp. Barycentric Julian Date
+  # Barycorr   = True                          # Barycentric Corrections Applied?
+  # ApPhot     = ccd_hsp                       # Photometry Program
+  # OrigFile   = runbase6.                     # Source Photometry Filename
+  # ApRadius   = 6.00                          # Aperture Radius (pixels)
+  # AvgScatter = 1.25                          # Avg. Point-to-Point Scatter (%)
+  # Comps      = 2                             # Comparison stars used
+  # PolyOrder  = 3                             # Degree of Polynomial Division
+  # Nkeep      = 1049                          # Number of points in light curve 
+  # Ndelete    = 0                             # Number of points removed
+  # Author     = Zach Vanderbosch              # Author of this light curve
+  # CreatedOn  = 2021-02-10 08:57:51.459       # Date created
+  # Columns: Time (s), Relative Flux, Relative Flux Error
+          0.000  -0.031284   0.002743
+         15.000  -0.030957   0.002611
+         30.000  -0.029607   0.002626
+         ...        ...        ...     
+      15690.173  -0.011376   0.002271
+      15705.173  -0.029081   0.002532
+      15720.174  -0.024124   0.002615
 
 
 The .phot File
 ~~~~~~~~~~~~~~
 
-The .phot file also starts with a header providing some of the same information as the .lc file, and is then followed by several columns of data. The first two columns are the same as for the .lc file, providing the raw and barycentric corrected times at mid-exposure with respect to the first exposure.
+The .phot file also starts with a header providing some of the same information as the .lc file, and is then followed by several columns of data. The first column is the same as for the .lc file, providing the mid-exposure times with respect to the first exposure.
 
 The remaining columns provide the sky-subtracted photometric counts for the target followed by each comparison star. The last column is always the sky column and represents the amount of background counts subtracted from the target's aperture. Sky counts are not provided for the comparison stars. The number of comparison star columns will reflect the original number of comparison stars loaded in the *ccd_hsp* or *MAESTRO* photometry files, even if they don't all get used to generate the divided light curve. However, if specific points were deleted from the divided light curve, they will also be removed from this file.
 
@@ -205,36 +205,37 @@ Below is an example .phot file, again showing the header followed by the first a
 
 .. code-block:: text
 
-  # Object     : G117-B15A                     # Name of Object
-  # RA         : 09 24 15.27                   # Object Right Ascension
-  # Dec        : +35 16 51.3                   # Object Declination
-  # Telescope  : McDonald 2.1m                 # Name of Telescope
-  # Instrument : ProEM                         # Name of Instrument
-  # TeleCode   : mcd2                          # Teledat Code Name
-  # Date       : 2018-01-26                    # Mid-Exp. UTC Start Date
-  # UTC        : 05:06:01.500                  # Mid-Exp. UTC Start Time
-  # MJD        : 58144.212517361               # Mid Exposure MJD Start
-  # Exptime    : 15.000000                     # Exposure Time (s)
-  # Filter     : BG40                          # Filter Name
-  # BJED       : 2458144.718681479             # Mid Exp. Barycentric Julian Date
-  # ApPhot     : ccd_hsp                       # Photometry Program
-  # OrigFile   : runbase6.                     # Source Photometry Filename
-  # ApRadius   : 6.00                          # Aperture Radius (pixels)
-  # Nkeep      : 1049                          # Number of points in light curve 
-  # Ndelete    : 0                             # Number of points removed
-  # Columns: Raw T-mid (s), BaryCorr T-mid (s), Target, Comp(s), Sky
-       0.000       0.000     192620    88577    25195    78351
-      15.000      15.000     206569    94587    27371    76162
-      30.000      30.000     204690    92457    28212    75914
-      ...         ...         ...       ...      ...      ...
-   15690.000   15690.173     214079    93761    27382    13946
-   15705.000   15705.173     175979    78464    22928    14297
-   15720.000   15720.174     166926    73647    22034    15337
+  # Object     = G117-B15A                     # Name of Object
+  # RA         = 09 24 15.27                   # Object Right Ascension
+  # Dec        = +35 16 51.3                   # Object Declination
+  # Telescope  = McDonald 2.1m                 # Name of Telescope
+  # Instrument = ProEM                         # Name of Instrument
+  # TeleCode   = mcd2                          # Teledat Code Name
+  # Date       = 2018-01-26                    # Mid-Exp. UTC Start Date
+  # Time       = 05:06:01.500                  # Mid-Exp. UTC Start Time
+  # MJD        = 58144.212517361               # Mid Exposure UTC MJD Start
+  # Exptime    = 15.000000                     # Exposure Time (s)
+  # Filter     = BG40                          # Filter Name
+  # BJED       = 2458144.718681479             # Mid Exp. Barycentric Julian Date
+  # Barycorr   = True                          # Barycentric Corrections Applied?
+  # ApPhot     = ccd_hsp                       # Photometry Program
+  # OrigFile   = runbase6.                     # Source Photometry Filename
+  # ApRadius   = 6.00                          # Aperture Radius (pixels)
+  # Nkeep      = 1049                          # Number of points in light curve 
+  # Ndelete    = 0                             # Number of points removed
+  # Columns: Time (s), Target, Comparisons, Sky
+         0.000     192620    88577    25195    78351
+   	15.000     206569    94587    27371    76162
+        30.000     204690    92457    28212    75914
+        ...         ...       ...      ...      ...
+     15690.173     214079    93761    27382    13946
+     15705.173     175979    78464    22928    14297
+     15720.174     166926    73647    22034    15337
 
 The phot2lc_log File
 ~~~~~~~~~~~~~~~~~~~~
 
-The *phot2lc_log.txt* file saves information about the light curve extraction so that if you want to rerun phot2lc for an object, it will automatically apply the same changes that you had already made. This file is only generated if you have previously saved a light curve and includes information about which points had been deleted, what polynomial order was used for detrending, and which comparison stars had been used for division. This can save large amounts of time for users when small modifications need to be made after the original light curve extraction.
+The *phot2lc_log.txt* file saves information about the light curve extraction so that if you want to rerun phot2lc for an object, it will automatically apply the same changes that you had already made. This file is only generated if you have previously saved a light curve and includes information about which points had been deleted, what polynomial was used for detrending, and which comparison stars had been used for division. This can save large amounts of time for users when small modifications need to be made after the original light curve extraction.
 
 In addition, this file stores each data point's raw timestamp, prior to barycentric corrections, so that the timing information is preserved. This is useful if phot2lc originally generated timestamps via the header keywords within a list of FITS files, but you would like to remove most of the FITS files post-extraction to save computer space. If a *phot2lc_log* file is present, phot2lc will preferentially use it to generate the time stamps upon execution. 
 
@@ -243,14 +244,14 @@ An example *phot2lc_log* file is shown below, which shows the header and the fir
 .. code-block:: text
 
   #     OBJECT = G117-B15A
-  # POLYNOMIAL = 3
+  # POLYNOMIAL = 3,0,3.00,3.00
   #      DTMID = 2018-01-26T05:06:01.500
   #      COMPS = 1+2
   #       TEXP = 15.000000
        0.000  1
       15.000  1
       30.000  1
-      ...     ...
+      ...    ...
    15690.000  1
    15705.000  1
    15720.000  1

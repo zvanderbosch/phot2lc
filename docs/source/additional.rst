@@ -14,29 +14,37 @@ A program designed for combining individual phot2lc light curve (.lc) files into
 .. code-block:: text
 
   -f --infiles     Input files.
+  -b --bypass      Bypass the barycentric correction check and weld LC's anyways.
   -o --outfile     Output filename.
 
-An example usage would look like:
+wildlc will check the *barycorr* entries within each .lc file to make sure every light curve being welded has had barycentric time corrections applied. If one or more of the .lc files has barycorr = False, wildly will throw an error. If you know that your light curves are not all barycentric corrected and want to weld anyways, you can use the --bypass (-b) command to skip the check. An example usage would look like:
 
 .. code-block:: bash
 
   weldlc -f *.lc -o combined.lc
 
-where *\*.lc* would provide as input every .lc file within the current folder, and *combined.lc* would be the name of the resulting file with the combined light curve. A welded light curve file will have the same four data columns as an original .lc file, but different header information. An example header is given below:
+or
+
+.. code-block:: bash
+
+  weldlc -f *.lc -o combined.lc --bypass
+
+where *\*.lc* would provide as input every .lc file within the current folder, and *combined.lc* would be the name of the resulting file with the combined light curve. A welded light curve file will have the same three data columns as an original .lc file, but different header information. An example header is given below:
 
 .. code-block:: text
 
-  # Object     : G117-B15A                     # Name of Object
-  # RA         : 09 24 15.27                   # Object Right Ascension
-  # Dec        : +35 16 51.3                   # Object Declination
-  # Date       : 2018-01-26                    # Mid-Exposure TDB Date at T0
-  # Time       : 05:14:54.080                  # Mid-Exposure TDB Time at T0
-  # BJED       : 2458144.718681479             # Mid-Exposure TDB JD at T0
-  # WeldNum    : 2                             # Number of files welded
-  # Npoints    : 3905                          # Number of data points
-  # Tspan      : 1.14824075                    # Time spanned by data (days)
-  # WeldDate   : 2020-07-13 06:04:11.493       # File creation date
-  # Columns: Raw T-mid (s), BaryCorr T-mid (s), Rel. Flux, Rel. Flux Error
+  # Object     = G117-B15A                     # Name of Object
+  # RA         = 09 24 15.27                   # Object Right Ascension
+  # Dec        = +35 16 51.3                   # Object Declination
+  # Date       = 2018-01-26                    # Mid-Exposure TDB Date at T0
+  # Time       = 05:14:54.080                  # Mid-Exposure TDB Time at T0
+  # BJED       = 2458144.718681479             # Mid-Exposure TDB JD at T0
+  # BaryCorr   = True                          # Whether the times are barycentric corrected
+  # WeldNum    = 2                             # Number of files welded
+  # Npoints    = 3905                          # Number of data points
+  # Tspan      = 1.14824075                    # Time spanned by data (days)
+  # WeldDate   = 2021-02-10 12:19:45.245       # File creation date
+  # Columns    = T-mid (s), Rel. Flux, Rel. Flux Error
 
 quicklook
 ---------

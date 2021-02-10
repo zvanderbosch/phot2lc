@@ -46,9 +46,21 @@ if (sys.version_info[0] == 3) & (sys.version_info[1] < 6):
     print('Program exited.')
     sys.exit(1)
 
-# Set the backend environment
+# Set the backend environment base on
+# the system platform to get best 
+# figure sizing results
 import matplotlib as mpl
-mpl.use('QT5agg')
+if sys.platform == 'darwin':   # Mac OSX
+    mpl.use('QT5agg')
+elif sys.platform == 'linux':  # Linux
+    mpl.use('TKagg')
+elif sys.platform == 'linux2': # Linux
+    mpl.use('TKagg')
+elif sys.platform == 'win32':  # Windows
+    mpl.use('QT5agg')
+else:                          # Other
+    mpl.use('TKagg')
+
 
 # Import Standard Packages
 import os

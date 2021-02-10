@@ -397,3 +397,9 @@ Version 1.6.1 through 1.6.6 - 2020-11-15
 ----------------------------------------
 > Small bug fixes
 
+
+Version 1.6.7 - 2021-02-10
+--------------------------
+> Chooses between QT5agg and TKagg backends for different
+  platforms.
+> Updated the RTD documentation

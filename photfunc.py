@@ -55,7 +55,8 @@ def print_commands():
     print("    - Type 'Z' to restore zoom to original. ")
     print("    - Type 'x' to perform sigma clipping. ")
     print("    - Type 's' to toggle the display of deleted points. ")
-    print("    - Type 'f' to choose the degree of polynomial fit.")
+    print("    - Type 'f' to perform a polynomial fit, WITHOUT sigma rejections.")
+    print("    - Type 'F' to perform a polynomial fit, WITH sigma rejections.")
     print("    - Type 'c' to choose comparison stars for division. ")
     print("    - Type 'v' to move to previous aperture size. ")
     print("    - Type 'w' to move to next aperture size. ")
@@ -235,9 +236,9 @@ def gen_compstr(combos,ps):
 def calc_lsp(time,flux):
 
     # Define frequency limit and resolution
-    deltat = time[-1] - time[0]
+    deltat = np.nanmax(time) - np.nanmin(time)
     deltaf = 1./deltat/20. # Oversample by 10
-    medtexp = np.median(time[1:] - time[0:-1])
+    medtexp = np.nanmedian(time[1:] - time[0:-1])
     fnyq = 0.5/medtexp
 
     # For easier viewing, limit Nyquist frequency to 10,000 uHz

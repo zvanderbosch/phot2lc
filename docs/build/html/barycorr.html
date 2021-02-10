@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Barycentric Corrections &mdash; phot2lc 1.5.1 documentation</title>
+  <title>Barycentric Corrections &mdash; phot2lc 1.6.7 documentation</title>
   
 
   
@@ -25,7 +25,7 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
         <script src="_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -36,7 +36,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="License" href="license.html" />
+    <link rel="next" title="Additional Tools" href="additional.html" />
     <link rel="prev" title="Quickstart" href="quickstart.html" /> 
 </head>
 
@@ -88,6 +88,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#timing-verifications">Timing Verifications</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="additional.html">Additional Tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
 <li class="toctree-l1"><a class="reference internal" href="license.html#contact">Contact</a></li>
 <li class="toctree-l1"><a class="reference internal" href="help.html">Need Help</a></li>
@@ -159,7 +160,7 @@
 <h1>Barycentric Corrections<a class="headerlink" href="#barycentric-corrections" title="Permalink to this headline">¶</a></h1>
 <p>While most of what phot2lc does is relatively straightforward, the barycentric time corrections are perhaps the most important and easily mishandled part of this program. phot2lc uses the <a class="reference external" href="https://docs.astropy.org/en/stable/time/#">Astropy Time package</a> to perform point-by-point barycentric time corrections which account for the observed object's sky coordinates, the Earth location of the observatory from which the observations were made, the date and time at which the observations were made, and the number of leap seconds that have occurred. If any of these four pieces of information are incorrect, the barycentric time corrections will be unreliable. The sources for each piece of information are listed below:</p>
 <ul class="simple">
-<li><p><strong>Object Coordinates</strong> come from stars.dat</p></li>
+<li><p><strong>Object Coordinates</strong> come from the stars.dat file</p></li>
 <li><p><strong>Observatory Location</strong> is identified using the telescope code (e.g. mcd2, lco1, pjmo, etc.)</p></li>
 <li><p><strong>Observation Date-Time</strong> comes from the image time stamps</p></li>
 <li><p><strong>Leap Seconds</strong> are now <a class="reference external" href="https://docs.astropy.org/en/stable/whatsnew/4.0.html#whatsnew-4-0-time-leap-seconds">automatically checked and updated by Astropy (v4.0 or later)</a></p></li>
@@ -189,7 +190,7 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="license.html" class="btn btn-neutral float-right" title="License" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="additional.html" class="btn btn-neutral float-right" title="Additional Tools" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="quickstart.html" class="btn btn-neutral float-left" title="Quickstart" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
