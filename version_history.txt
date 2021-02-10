@@ -408,3 +408,6 @@ Version 1.6.8 - 2021-02-10
 --------------------------
 > Fallback to DejaVu Sans Mono for non macOSX platforms
 
+Version 1.6.9 - 2021-02-10
+--------------------------
+> Command line option description and RTD docs updates

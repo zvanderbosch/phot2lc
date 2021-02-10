@@ -28,7 +28,7 @@ at which a point you will be lead through a series of prompts to edit the config
 
 Below are detailed descriptions for each parameter's meaning and use:
 
-* **author**: phot2lc User name (i.e. your name).
+* **author**: phot2lc User name (e.g. your name).
 
 * **image_list_name**: Name of the file which contains the list of FITS images corresponding to each photometric data point, for time stamp generation. 
   

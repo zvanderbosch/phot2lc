@@ -22,7 +22,7 @@ copyright = '2020, Zach Vanderbosch'
 author = 'Zach Vanderbosch'
 
 # The full version, including alpha/beta/rc tags
-release = '1.6.7'
+release = '1.6.9'
 
 
 # -- General configuration ---------------------------------------------------
