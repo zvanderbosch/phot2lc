@@ -29,6 +29,7 @@ phot2lc also has several command line arguments available which can be used indi
   -s --source    Code name for photometry program used
   -i --image     Name of specific image instead of list
   -o --object    Name of object matching stars.dat entry
+  -b --barycorr  If invoked, do NOT perform barycentric corrections.
 
 If these command line options are used, they will override the defaults that are set within the config.dat file by the photconfig program.
 
