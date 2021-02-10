@@ -331,11 +331,17 @@ im = imfig.add_subplot(gsim[0])
 # Set Window Name
 imfig.canvas.set_window_title('First Image')
 
-# Font Choices
-fonta = {'fontname': 'AppleGothic',
-          'weight': 'heavy'}
-fontb = {'fontname': 'AppleGothic',
-         'weight': 'normal'}
+# Font Choices (better fonts for macOSX)
+if sys.platform == 'darwin':
+    fonta = {'fontname': 'AppleGothic',
+              'weight': 'heavy'}
+    fontb = {'fontname': 'AppleGothic',
+             'weight': 'normal'}
+else:
+    fonta = {'fontname': 'DejaVu Sans Mono',
+              'weight': 'heavy'}
+    fontb = {'fontname': 'DejaVu Sans Mono',
+             'weight': 'normal'}
 
 # Show the first image
 im.imshow(image0, cmap='gray',vmin=vmin0, vmax=vmax0)
