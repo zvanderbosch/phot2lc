@@ -73,7 +73,7 @@ From left to right, these windows are named:
 
 * **First Image**: Displays the first image. The target and comparison stars are marked if a *pixloc_name* file was provided, otherwise this will just be an unmarked image. This image will be saved as a PNG file when the program is run.
 * **Raw Photometry**: Displays the raw photometry for target and comparison stars, along with the amount of sky subtracted from the target. The mean values are displayed to the right of each light curve.
-* **Divided Light Curve**: Primarily displays the divided light curve, but also displaying the summed comparison star flux (top right panel) and the polynomial being used to de-trend the light curve (top left panel). This is where most of the interactive tools are used.
+* **Divided Light Curve**: Primarily displays the divided light curve, but also displays the summed comparison star flux (top right panel) and the polynomial being used to de-trend the light curve (top left panel). This is where most of the interactive tools are used.
 
 
 Command Options
@@ -226,7 +226,7 @@ Below is an example .phot file, again showing the header followed by the first a
   # Ndelete    = 0                             # Number of points removed
   # Columns: Time (s), Target, Comparisons, Sky
          0.000     192620    88577    25195    78351
-   	15.000     206569    94587    27371    76162
+   	    15.000     206569    94587    27371    76162
         30.000     204690    92457    28212    75914
         ...         ...       ...      ...      ...
      15690.173     214079    93761    27382    13946
