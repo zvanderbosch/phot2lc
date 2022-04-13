@@ -137,6 +137,8 @@ def get_loc(hdr,telcode):
             loc = EarthLocation.of_site('mcdonald')
         elif any([x=='Tololo'] for x in site_info):
             loc = EarthLocation.of_site('ctio')
+    elif telcode == 'kped':
+        loc = EarthLocation.of_site('Kitt Peak')
     return loc
 
 

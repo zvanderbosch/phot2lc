@@ -112,6 +112,21 @@ def get_telinfo():
      "tformat" :1,
      "dark"    :0.002,
      "read"    :7.60,
+     "gain"    :1.00},
+
+     {"telename":"KPED 2.1m",
+     "instname":"KPED",
+     "code"    :"kped",
+     "objname" :"OBJECT",
+     "filter"  :"FILTER",
+     "observer":"OBSERVER",
+     "date"    :"DATE-OBS",
+     "time"    :"TIME-OBS",
+     "texp"    :"EXPTIME",
+     "dformat" :0,
+     "tformat" :0,
+     "dark"    :np.nan,
+     "read"    :np.nan,
      "gain"    :1.00}]
 
     return tele_info

@@ -1,4 +1,4 @@
-2Version 0.1.0 - All Versions before 2020-06-01
+Version 0.1.0 - All Versions before 2020-06-01
 ----------------------------------------------
 > Created phot2lc.py as a python replacement for
   WQED. Included just the basic functionality
@@ -411,3 +411,19 @@ Version 1.6.8 - 2021-02-10
 Version 1.6.9 - 2021-02-10
 --------------------------
 > Command line option description and RTD docs updates
+
+
+Version 1.7.0 - 2022-01-28
+--------------------------
+> Fixed some dependency issues with Matplotlib 3.5
+> Added support for the KPED instrument on the Kitt Peak 2.1m
+> Changed the Layout of the Divided Light Curve Panel so that
+  the comparison star light curve and divided target light
+  curve share the same x-axis for easier identification of
+  bad point removal.
+> The "s" key command now toggles the display of deleted
+  summed comparison star points in addition to the divided
+  light curve points.
+> Changed the matplotlib backend to be system dependent for
+  the quicklook program. QT5Agg was distorted on some
+  Linux machines, switched to using TKAgg.
