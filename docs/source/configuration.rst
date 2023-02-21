@@ -25,20 +25,34 @@ at which a point you will be lead through a series of prompts to edit the config
 * **default_image**
 * **default_object**
 
+After initially installing phot2lc, the default values for these parameters should be as follows:
+
+.. code-block:: bash
+
+   author            = Zach Vanderbosch
+   image_list_name   = olist
+   pixloc_name       = phot_coords.orig
+   stardat_location  = /home/zachvanderbosch/data/stars.dat
+   default_telescope = mcd2
+   default_source    = hsp
+   default_image     = None
+   default_object    = None
+
+
 
 Below are detailed descriptions for each parameter's meaning and use:
 
 * **author**: phot2lc User name (e.g. your name).
 
-* **image_list_name**: Name of the file which contains the list of FITS images corresponding to each photometric data point, for time stamp generation. 
+* **image_list_name**: Name of the file which contains the list of image filenames corresponding to each photometric data point. The images are used for a few purposes, such as grabbing some key header information, and using the first filename in the list to display an image for target and comparison star identification. Depending on which photometry pipeline was used, the image headers may also be used to generate time stamps for each data point in the light curve.
   
-    * If using MAESTRO output, it is assumed that the time stamps will come from the *counts* files, so this parameter can be set to **None**.
+    * If using MAESTRO, ULTRACAM, or HiPERCAM output, it is assumed that the time stamps will come from the photometric output files, so this parameter can be set to **None**.
   
     * If using ccd_hsp output, this file is only needed if you want to generate time stamps for your light curve by grabbing times from each individual FITS header. An alternative is to use only the first image, in which case the time stamps will be generated using the exposure time multiplied by the number of exposures since the first image. In this case, you can also set this parameter to **None**.
 
 * **pixloc_name**: Name of the file containing initial guesses for the pixel coordinates of each star. 
 
-    * This is optional, used only by phot2lc for marking stars when displaying the first image, and can be set to **None** if unavailable.
+    * This is optional, used only by phot2lc for marking stars when displaying the first image, and can be set to **None** if unavailable. When using 
 
 * **stardat_location**: Path and filename for file containing the RA and Dec corresponding to a given object (e.g. /Users/zvander/stars.dat). This parameter is required, as is :ref:`the stars.dat file<The stars.dat file>`.
 * **default_telescope**: Default telescope code.
