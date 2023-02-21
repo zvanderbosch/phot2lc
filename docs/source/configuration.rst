@@ -46,9 +46,9 @@ Below are detailed descriptions for each parameter's meaning and use:
 
 * **image_list_name**: Name of the file which contains the list of image filenames corresponding to each photometric data point. The images are used for a few purposes, such as grabbing some key header information, and using the first filename in the list to display an image for target and comparison star identification. Depending on which photometry pipeline was used, the image headers may also be used to generate time stamps for each data point in the light curve.
   
-    * If using MAESTRO, ULTRACAM, or HiPERCAM output, the time stamps will automatically come from the photometric output files instead of the images, so only the first image listed within image_list_name is used for display purposes and for grabbing some header information. This parameter can be set to **None** as long as a single image name is provided using the **phot2lc** command line option -i (--image).
+    * If using MAESTRO, ULTRACAM, or HiPERCAM output, the time stamps will automatically come from the photometric output files instead of the images, so only the first image listed within image_list_name is used for display purposes and for grabbing some header information. This parameter can be set to **None** as long as a single image name is provided using the **phot2lc** command line option -i (`--`image).
   
-    * If using ccd_hsp output, this file is only needed if you want to generate time stamps for your light curve by grabbing times from each individual FITS header. If this parameter is set to **None**, then timestamps will be generated using the exposure time multiplied by the number of exposures since the first image. In this case, the name of the first image must be provided using the **phot2lc** command line option -i (--image).
+    * If using ccd_hsp output, this file is only needed if you want to generate time stamps for your light curve by grabbing times from each individual FITS header. If this parameter is set to **None**, then timestamps will be generated using the exposure time multiplied by the number of exposures since the first image. In this case, the name of the first image must be provided using the **phot2lc** command line option -i (`--`image).
 
 * **pixloc_name**: Name of the file containing initial guesses for the pixel coordinates of each star. 
 
@@ -58,9 +58,9 @@ Below are detailed descriptions for each parameter's meaning and use:
 
 * **default_telescope**: Default telescope code.
 
-    * Telescope codes correspond to an entry within teledat.py and describe both the telescope, instrument, and FITS header keywords needed to set some phot2lc parameters. For a list of currently supported telescope codes, see the :ref:`Introduction<Introduction>`, or type **phot2lc -c** on the command line. This default setting can be overridden with the **phot2lc** command line option -t (--telescope).
+    * Telescope codes correspond to an entry within teledat.py and describe both the telescope, instrument, and FITS header keywords needed to set some phot2lc parameters. For a list of currently supported telescope codes, see the :ref:`Introduction<Introduction>`, or type **phot2lc -c** on the command line. This default setting can be overridden with the **phot2lc** command line option -t (`--`telescope).
 
-* **default_source**: Default photometry pipeline whose out output is being loaded in to **phot2lc**. Must be one of the currently supported pipelines listed in the :ref:`Introduction<Introduction>`. This default setting can be overridden with the **phot2lc** command line option -s (--source).
+* **default_source**: Default photometry pipeline whose out output is being loaded in to **phot2lc**. Must be one of the currently supported pipelines listed in the :ref:`Introduction<Introduction>`. This default setting can be overridden with the **phot2lc** command line option -s (`--`source).
 
 * **default_image**: Default image name. 
 
@@ -68,7 +68,7 @@ Below are detailed descriptions for each parameter's meaning and use:
 
 * **default_object**: Default object name. 
 
-    * A useful parameter to set if you intend to reduce a lot of light curves at once for a single object whose name cannot be obtained directly from the image header. This object name needs to correspond to an object name within your stars.dat file, since this is how the object's coordinates are acquired for barycentric time corrections. If unused, set to **None**. This default setting can be overridden with the **phot2lc** command line option -o (--object).
+    * A useful parameter to set if you intend to reduce a lot of light curves at once for a single object whose name cannot be obtained directly from the image header. This object name needs to correspond to an object name within your stars.dat file, since this is how the object's coordinates are acquired for barycentric time corrections. If unused, set to **None**. This default setting can be overridden with the **phot2lc** command line option -o (`--`object).
 
 
 The stars.dat File

@@ -15,7 +15,9 @@ First of all, **phot2lc** is *not* a photometry pipeline. Rather, **phot2lc** is
 Currently Supported Photometry Pipelines
 ----------------------------------------
 
-**phot2lc** will not automatically work with photometric data from all pipelines. Each pipeline will produce output with different content and formats, and **phot2lc** must be configured to properly ingest the data. Output from the following photometry pipelines is currently supported:
+**phot2lc** will not automatically work with photometric data from all pipelines. Each pipeline will produce output with different content and formats, and **phot2lc** must be configured to properly ingest the data. 
+
+Output from the following photometry pipelines is currently supported:
 
 * ccd_hsp (`Kanaan et al. 2002 <https://ui.adsabs.harvard.edu/abs/2002A%26A...389..896K/abstract>`_)
 * MAESTRO (`Dalessio 2010 <https://ui.adsabs.harvard.edu/abs/2010AAS...21545209D/abstract>`_, `2013 <https://ui.adsabs.harvard.edu/abs/2013PhDT.......170D/abstract>`_)
