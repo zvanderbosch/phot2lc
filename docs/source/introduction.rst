@@ -9,13 +9,13 @@ Introduction
 What is phot2lc?
 ----------------
 
-First of all, **phot2lc** is *not* a photometry pipeline. Rather, **phot2lc** is a program that ingests the output from various photometric pipelines and provides users with a set of tools to generate and manipulate divided light curves. It is largely inspired by `WQED <https://ui.adsabs.harvard.edu/abs/2009JPhCS.172a2081T/abstract>`_, and so provides functionality such as comparison star selection, aperture size selection, removing poor-quality data, polynomial fitting, and barycentric time corrections.
+First of all, **phot2lc** is *not* a photometry pipeline. Rather, **phot2lc** is a program that ingests the output from various photometric pipelines and provides users with a set of tools to extract and manipulate divided light curves. It is largely inspired by `WQED <https://ui.adsabs.harvard.edu/abs/2009JPhCS.172a2081T/abstract>`_, and provides functionality such as comparison star selection, aperture size selection, removing poor-quality data, polynomial fitting, and barycentric time corrections.
 
 
 Currently Supported Photometry Pipelines
 ----------------------------------------
 
-**phot2lc** will not work out of the box with photometric data from all pipelines. Each pipeline will produce output with different content and formats, and **phot2lc* must be programmed to properly ingest the data. Output from the following photometry pipelines is currently supported:
+**phot2lc** will not automatically work with photometric data from all pipelines. Each pipeline will produce output with different content and formats, and **phot2lc** must be configured to properly ingest the data. Output from the following photometry pipelines is currently supported:
 
 * ccd_hsp (`Kanaan et al. 2002 <https://ui.adsabs.harvard.edu/abs/2002A%26A...389..896K/abstract>`_)
 * MAESTRO (`Dalessio 2010 <https://ui.adsabs.harvard.edu/abs/2010AAS...21545209D/abstract>`_, `2013 <https://ui.adsabs.harvard.edu/abs/2013PhDT.......170D/abstract>`_)
@@ -28,7 +28,7 @@ If your preferred photometry pipeline is not listed here, please :ref:`contact Z
 Currently Supported Telescopes
 ------------------------------
 
-In addition to loading in outputs from photometric pipelines, **phot2lc** also loads in one or more of the actual images (FITS, ucm, or hcm format), both for display purposes and to grab some key header information such as OBSERVER, FILTER, DATE-OBS, TIME-OBS, etc. For different telescopes and instruments, the keywords may have slightly different names or the timestamps may have different formats, so phot2lc needs to be properly configured to read the data.
+In addition to loading in outputs from photometric pipelines, **phot2lc** also loads in one or more of the actual images (FITS, ucm, or hcm format), both for display purposes and to grab some key header information such as observer name, filter name, exposure time, observation timestamps, etc. For different telescopes and instruments, the header keywords may have different names or the timestamps may have different formats, so **phot2lc** needs to be properly configured to read the data.
 
 Data from the following telescopes/instruments are currently supported:
 
@@ -41,4 +41,4 @@ Data from the following telescopes/instruments are currently supported:
 * Palomar 200-in with CHIMERA (telcode = p200)
 * Pico dos Dias Observatory 1.6m with Ixon Camera (telcode = opd)
 
-
+If your preferred telescope+instrument is not listed here, please :ref:`contact Zach Vanderbosch<Contact>` about adding support for it in **phot2lc**. In this case, however, users may find it relatively easy to add support for a new instrument themselves by adding a new entry into the "teledat.py" script that is installed with **phot2lc**.
