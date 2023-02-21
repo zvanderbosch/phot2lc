@@ -19,10 +19,10 @@ Currently Supported Photometry Pipelines
 
 Output from the following photometry pipelines is currently supported:
 
-* ccd_hsp (`Kanaan et al. 2002 <https://ui.adsabs.harvard.edu/abs/2002A%26A...389..896K/abstract>`_)
-* MAESTRO (`Dalessio 2010 <https://ui.adsabs.harvard.edu/abs/2010AAS...21545209D/abstract>`_, `2013 <https://ui.adsabs.harvard.edu/abs/2013PhDT.......170D/abstract>`_)
-* ULTRACAM (`Dhillon et al. 2007 <https://ui.adsabs.harvard.edu/abs/2007MNRAS.378..825D/abstract>`_)
-* HiPERCAM (`Dhillon et al. 2021 <https://ui.adsabs.harvard.edu/abs/2021MNRAS.507..350D/abstract>`_)
+* ccd_hsp (`Kanaan et al. 2002 <https://ui.adsabs.harvard.edu/abs/2002A%26A...389..896K/abstract>`_, source code = hsp)
+* MAESTRO (`Dalessio 2010 <https://ui.adsabs.harvard.edu/abs/2010AAS...21545209D/abstract>`_, `2013 <https://ui.adsabs.harvard.edu/abs/2013PhDT.......170D/abstract>`_, source code = mae)
+* ULTRACAM (`Dhillon et al. 2007 <https://ui.adsabs.harvard.edu/abs/2007MNRAS.378..825D/abstract>`_, source code = ucm)
+* HiPERCAM (`Dhillon et al. 2021 <https://ui.adsabs.harvard.edu/abs/2021MNRAS.507..350D/abstract>`_, source code = hcm)
 
 If your preferred photometry pipeline is not listed here, please :ref:`contact Zach Vanderbosch<Contact>` about adding support for it in **phot2lc**.
 
