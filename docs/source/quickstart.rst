@@ -1,7 +1,7 @@
 Quickstart
 ==========
 
-This quickstart guide assumes you have already performed aperture photometry using either IRAF's ccd_hsp or the Matlab-based MAESTRO software, and have already :ref:`configured phot2lc<Configuration>` to run properly on your machine. 
+This quickstart guide assumes you have already performed photometry using one of the supported pipelines (see :ref:`Introduction<Introduction>`), and have already :ref:`configured phot2lc<Configuration>` to run properly on your machine. 
 
 * `Basic Usage`_
 * `Input Files`_
@@ -19,7 +19,7 @@ phot2lc is a command line tool, and can be executed from the command line by sim
 
    phot2lc
 
-phot2lc also has several command line arguments available which can be used individually, or all at once:
+phot2lc also has several command line arguments available:
 
 .. code-block:: text
 
@@ -27,11 +27,12 @@ phot2lc also has several command line arguments available which can be used indi
   -c --codes     Print a list of available telescope codes
   -t --telescope Code name for telescope used
   -s --source    Code name for photometry program used
+  -p --photname  Base filename for photometry output files
   -i --image     Name of specific image instead of list
   -o --object    Name of object matching stars.dat entry
-  -b --barycorr  If invoked, do NOT perform barycentric corrections.
+  -b --barycorr  If invoked, do NOT perform barycentric corrections
 
-If these command line options are used, they will override the defaults that are set within the config.dat file by the photconfig program.
+If these command line arguments are used, they will *override the defaults* that are set within the config.dat file by the photconfig program.
 
 
 Input Files
