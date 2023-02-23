@@ -9,7 +9,7 @@ Introduction
 What is phot2lc?
 ----------------
 
-First of all, **phot2lc** is *not* a photometry pipeline. Rather, **phot2lc** is a program that ingests the output from various photometric pipelines and provides users with a set of tools to extract and manipulate divided light curves. It is largely inspired by `WQED <https://ui.adsabs.harvard.edu/abs/2009JPhCS.172a2081T/abstract>`_, and provides functionality such as comparison star selection, aperture size selection, removing poor-quality data, polynomial fitting, and barycentric time corrections.
+First of all, **phot2lc** is *not* a photometry pipeline. Rather, **phot2lc** is a program that ingests the output from various photometry pipelines and provides users with a set of tools to extract and manipulate divided light curves. It is largely inspired by `WQED <https://ui.adsabs.harvard.edu/abs/2009JPhCS.172a2081T/abstract>`_, and provides functionality such as comparison star selection, aperture size selection, removing poor-quality data, polynomial fitting, and barycentric time corrections.
 
 
 Currently Supported Photometry Pipelines
