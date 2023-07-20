@@ -127,7 +127,37 @@ def get_telinfo():
      "tformat" :0,
      "dark"    :np.nan,
      "read"    :np.nan,
-     "gain"    :1.00}]
+     "gain"    :1.00},
+
+     {"telename":"Palomar 200in",
+     "instname":"CHIMERA",
+     "code"    :"p200",
+     "objname" :"OBJECT",
+     "filter"  :"FILTER",
+     "observer":"OBSERVER",
+     "date"    :"DATE-OBS",
+     "time"    :"TIME-OBS",
+     "texp"    :"EXPTIME",
+     "dformat" :0,
+     "tformat" :0,
+     "dark"    :np.nan,
+     "read"    :np.nan,
+     "gain"    :1.00},
+
+     {"telename":"OPD 1.6m",
+     "instname":"Cam1+Ixon",
+     "code"    :"opd",
+     "objname" :"OBJECT",
+     "filter"  :"FILTER",
+     "observer":"OBSERVER",
+     "date"    :"DATE-OBS",
+     "time"    :None,
+     "texp"    :"EXPTIME",
+     "dformat" :1,
+     "tformat" :1,
+     "dark"    :np.nan,
+     "read"    :np.nan,
+     "gain"    :1.00},]
 
     return tele_info
 

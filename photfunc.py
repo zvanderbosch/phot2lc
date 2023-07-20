@@ -7,6 +7,7 @@ from astropy.io import fits
 from astropy.time import Time
 from astropy.coordinates import EarthLocation
 from astropy.timeseries import LombScargle as ls
+import astropy.units as u
 import lmfit as lmf
 from lmfit import Model
 
@@ -97,7 +98,11 @@ def get_time(fname,tdict):
         
     elif (dformat == 1) & (tformat == 1):
         dt_obs = hdr[tdict['date']] # Must be ISO or ISOT format, any separator works
-        t_exp = float(hdr[tdict['texp']]) # Must be in seconds
+        if tdict['code'] == 'opd':
+            texp_str = hdr[tdict['texp']]
+            t_exp = float(texp_str.replace(",","."))
+        else:
+            t_exp = float(hdr[tdict['texp']]) # Must be in seconds
         
         # Convert to ISOT format for Astropy Time
         time = Time(dt_obs,scale='utc')
@@ -124,7 +129,10 @@ def get_loc(hdr,telcode):
     elif telcode == 'perk':
         loc = EarthLocation.of_site('lowell')
     elif telcode == 'pjmo':
-        loc = EarthLocation.from_geodetic(31.67991667,97.67352778,333.0)
+        loc = EarthLocation.from_geodetic(
+            lon=31.67991667*u.deg,
+            lat=97.67352778*u.deg,
+            height=333.0*u.m)
     elif telcode == 'lco1':
         site_info = hdr['SITE'].split(" ")
         if any([x=='Haleakala'] for x in site_info):
@@ -137,11 +145,23 @@ def get_loc(hdr,telcode):
             loc = EarthLocation.of_site('mcdonald')
         elif any([x=='Tololo'] for x in site_info):
             loc = EarthLocation.of_site('ctio')
+        elif any([x=='Tenerife'] for x in site_info):
+            loc = EarthLocation.from_geodetic(
+                lon=20.301111*u.deg,
+                lat=-16.510556*u.deg,
+                height=2390.*u.m)
     elif telcode == 'kped':
         loc = EarthLocation.of_site('Kitt Peak')
+    elif telcode == 'p200':
+        loc = EarthLocation.of_site('palomar')
+    elif telcode == 'opd':
+        loc = EarthLocation.from_geodetic(
+            lon=-45.5825*u.deg,
+            lat=-22.71777778*u.deg,
+            height=1864.0*u.m)
     return loc
 
-
+# LNA:  long= W 45 34 57  lat= -22 43 04, altitude = 1864m
 
 ###################################################
 # Some functions used for calculating a divided light curve
@@ -151,6 +171,22 @@ def pp_scat(ydata):
     Nv = len(ydata)
     pp_avg = (sum((ydata[0:-1]-ydata[1:])**2)/(Nv-1))**(0.5)
     return pp_avg
+
+# Function to calculate the rolling std. dev. winthin a window
+def roll_std(ydata, window):
+    
+    Ny = len(ydata)
+    Nsteps = int(np.floor(Ny/window))
+    step_array = np.arange(0,Nsteps,1)
+    
+    stds = []
+    for step in step_array:
+        sstart = int(step*window)
+        sstop = int((step+1)*window)
+        yrange = ydata[sstart:sstop]
+        stds.append(np.nanstd(yrange))
+        
+    return np.median(stds)
 
 
 ###########################################################
@@ -227,11 +263,15 @@ def gen_compstr(combos,ps):
                 combo_str += '{:1d}'.format(c-1)
             elif ps == 'mae':
                 combo_str += '{:.0f}'.format((c-1)/2)
+            elif ps in ['hcm','ucm']:
+                combo_str += '{:.0f}'.format(int(c.split("_")[1])-1)
         else:
             if ps == 'hsp':
                 combo_str += '+{:1d}'.format(c-1)
             elif ps == 'mae':
                 combo_str += '+{:.0f}'.format((c-1)/2)
+            elif ps in ['hcm','ucm']:
+                combo_str += '+{:.0f}'.format(int(c.split("_")[1])-1)
     return combo_str
 
 # Lomb Scargle Periodogram Function
@@ -273,30 +313,25 @@ def window_std(xarr,yarr,win,dwin):
 
 
 
-########################################################
+#########################################################
 # Functions for re-configuring the config.dat file
 
 def change_val(param,old_value):
     ## ask the user if they want to change/keep it.
-    change_value = input('Change {:<18s} (y/[n]): '.format(param.split("=")[0].strip()+"?"))
+    change_value = input('Change {:s} [{:s}]: '.format(param.split("=")[0].strip(),old_value))
 
-    if (change_value == 'Y') | (change_value == 'y'):
-        new_value = input('New value for %s: ' %param.split("=")[0].strip())
-        print('')
-        return new_value
-    else:
+    if change_value.strip() == '':
         return old_value
+    else:
+        return change_value.strip()
 
 # Function which updates the parameter values in config.dat
 def reconfig():
 
     config_path = os.path.dirname(os.path.realpath(__file__))
-    print('\nCurrent Configuration:')
-    print('----------------------')
     old_values = []
     with open(config_path + "/config.dat") as f:
         for line in f.readlines():
-            print(line.strip("\n"))
             old_values.append(line.strip("\n"))
     print('')
 
@@ -305,6 +340,7 @@ def reconfig():
     queries = ['author            = ',
                'image_list_name   = ',
                'pixloc_name       = ',
+               'photbase_name     = ',
                'stardat_location  = ',
                'default_telescope = ',
                'default_source    = ',

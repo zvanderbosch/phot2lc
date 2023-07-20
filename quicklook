@@ -3,11 +3,14 @@
 import sys
 import argparse
 import numpy as np
-from glob import glob
+import matplotlib as mpl
 import matplotlib.pyplot as plt
+
+from glob import glob
 from matplotlib.gridspec import GridSpec
 from astropy.timeseries import LombScargle as ls
 from scipy.signal import find_peaks
+
 from phot2lc.photfunc import calc_lsp, prewhiten
 
 # Set the backend environment based on the
@@ -99,6 +102,7 @@ for file in filenames:
     # Parse data
     time = data[:,0]
     flux = data[:,1]
+    fluxerr = data[:,2]
 
 
     # Get object name
@@ -152,7 +156,9 @@ for file in filenames:
     ax0 = fig.add_subplot(gs[0])
     ax1 = fig.add_subplot(gs[1])
 
-    ax0.plot(time/3600,flux*1e2,ls='None',marker='.',ms=5,mfc='k',mec='k')
+    ax0.errorbar(time/3600,flux*1e2,yerr=fluxerr*1e2,
+        ls='None',marker='.',ms=5,mfc='k',mec='k',
+        ecolor='silver',elinewidth=1)
     ax1.plot(farr*1e6,lsp*1e2,c='k',lw=1)
     ax1.axhline(sig*1e2,ls=':',c='C2')
 
@@ -188,14 +194,39 @@ for file in filenames:
                 ax1.text(f*1e6,1.13*amax,'{}'.format(i+1),ha='center',fontsize=7,color='b')
 
         # Print out Each Peaks Frequency and Amplitude
-        font = {'fontname':'Bitstream Vera Sans Mono'}
+        available_fonts = []
+        for f in mpl.font_manager.fontManager.ttflist:
+            available_fonts.append(f.name)
+        font_choices = ['Bitstream Vera Sans Mono',
+                        'DejaVu Sans Mono']
+        if font_choices[0] in available_fonts:
+            font = {'fontname':font_choices[0]}
+        else:
+            font = {'fontname':font_choices[1]}
         if Np > 0:
-            ax1.text(0.45,0.92,'Significant Peaks',fontsize=8,transform=ax1.transAxes,**font)
-            ax1.text(0.45,0.91,'___________________',transform=ax1.transAxes,**font)
+            ax1.text(0.55,0.92,'Significant Peaks',fontsize=8,transform=ax1.transAxes,**font)
+            ax1.text(0.55,0.91,'_____________________________',transform=ax1.transAxes,**font)
             for i,(f,a) in enumerate(zip(freq_vals,amp_vals)):
+                p = 1./f
                 yloc = 0.83 - (float(i)*0.055)
-                ax1.text(0.45,yloc,'{}: {:7.1f} $\mu$Hz  {:5.2f} %'.format(i+1,f*1e6,a*1e2),
-                         fontsize=8,transform=ax1.transAxes,**font)
+                if (p >= 600.) & (p < 3600.):
+                    p = p/60. # Convert to minutes if >= 10 minutes
+                    ax1.text(0.55,yloc,'{}: {:7.1f} $\mu$Hz, {:5.2f} min, {:5.2f} %'.format(i+1,f*1e6,p,a*1e2),
+                             fontsize=8,transform=ax1.transAxes,**font)
+
+                elif (p >= 3600.) & (p < 86400.):
+                    p = p/3600. # Convert to hours if >= 1 hour
+                    ax1.text(0.55,yloc,'{}: {:7.1f} $\mu$Hz, {:5.2f} hr, {:5.2f} %'.format(i+1,f*1e6,p,a*1e2),
+                             fontsize=8,transform=ax1.transAxes,**font)
+
+                elif (p >= 86400.):
+                    p = p/86400. # Convert to days if >= 1 day
+                    ax1.text(0.55,yloc,'{}: {:7.1f} $\mu$Hz, {:5.2f} d, {:5.2f} %'.format(i+1,f*1e6,p,a*1e2),
+                             fontsize=8,transform=ax1.transAxes,**font)
+
+                else:
+                    ax1.text(0.55,yloc,'{}: {:7.1f} $\mu$Hz, {:5.1f} s, {:5.2f} %'.format(i+1,f*1e6,1./f,a*1e2),
+                             fontsize=8,transform=ax1.transAxes,**font)
 
 
     # Add a title

@@ -35,7 +35,7 @@ Options:
 
 """ 
 
-# Check that Python in 3.6 or later
+# Check that Python is 3.6 or later
 import sys
 if sys.version_info[0] < 3:
     print('ERROR: phot2lc incompatible with Python 2.X')
@@ -64,8 +64,11 @@ else:                          # Other
 
 # Import Standard Packages
 import os
+import pwd
+import json
 import argparse
 import warnings
+import itertools
 import numpy as np
 import pandas as pd
 from glob import glob
@@ -90,11 +93,13 @@ from matplotlib.widgets import Cursor, MultiCursor
 from matplotlib.widgets import RectangleSelector
 
 # Import Custom Functions
+import phot2lc.teledat
 from phot2lc.teledat import get_telinfo
 from phot2lc.photfunc import progress_bar, print_commands
-from phot2lc.photfunc import get_time, pp_scat
+from phot2lc.photfunc import get_time, pp_scat, roll_std
 from phot2lc.photfunc import div_lc, gen_compstr, calc_lsp
 from phot2lc.photfunc import get_loc, window_std
+from phot2lc.ucm_utils import read_ucm
 
 
 #############################################################
@@ -109,23 +114,23 @@ with open(config_path + "/config.dat") as f:
         config_dat.append(l.strip("\n").split("=")[-1].strip())
 
 
-# Name for whoever is performing these reductions
-author = config_dat[0]
 # File containing the list of images being analyzed
 list_name = config_dat[1]
-# Optional File containing initial guesses at target + comp pixel
-# locations. This is the same file used for IRAF ccd_hsp aperture
-# photometry and is not needed if you don't have it.
+# Optional File containing initial guesses at source locations.
 tloc_name = config_dat[2]
+# Base filename for photometry output from pipelines
+phot_basename = config_dat[3]
 # Path to file containing object names + coordinates
-star_dat_filename = config_dat[3] 
+star_dat_filename = config_dat[4] 
+
 
 
 # Defualt arguments for argparse
-default_telescope = config_dat[4]
-default_source = config_dat[5]
-default_image = None if config_dat[6] == 'None' else config_dat[6]
-default_object = None if config_dat[7] == 'None' else config_dat[7]
+default_author = config_dat[0]
+default_telescope = config_dat[5]
+default_source = config_dat[6]
+default_image = None if config_dat[7] == 'None' else config_dat[7]
+default_object = None if config_dat[8] == 'None' else config_dat[8]
 
 
 #############################################################
@@ -134,10 +139,14 @@ default_object = None if config_dat[7] == 'None' else config_dat[7]
 parser = argparse.ArgumentParser()
 parser.add_argument('-c', '--codes',action='store_true',
                     help="If invoked, print list of available telescope codes.")
+parser.add_argument('-a', '--author',type=str,default=default_author,
+                    help="Name of phot2lc user.")
 parser.add_argument('-t', '--telescope',type=str,default=default_telescope,
                     help="Code name for telescope used.")
 parser.add_argument('-s', '--source',type=str,default=default_source,
                     help="Source of photometry (ccd_hsp or maestro)")
+parser.add_argument('-p', '--photname',type=str,default=phot_basename,
+                    help="Base filename for photometry output files.")
 parser.add_argument('-i', '--image',type=str,default=default_image,
                     help="Whether to use a list of images, or just one.")
 parser.add_argument('-o', '--object',type=str,default=default_object,
@@ -145,6 +154,12 @@ parser.add_argument('-o', '--object',type=str,default=default_object,
 parser.add_argument('-b', '--barycorr',action='store_false',
                     help="If invoked, do NOT perform barycentric corrections.")
 args = parser.parse_args()
+
+
+# Set author to system username if selected
+author = args.author
+if author == 'sys-user':
+	author = pwd.getpwuid(os.getuid()).pw_name
 
 
 #############################################################
@@ -181,9 +196,13 @@ else:
 
 
 # Currently supported photometry sources
-valid_sources = ['hsp','mae']
-source_dict = {'hsp':'ccd_hsp',
-               'mae':'maestro'}
+valid_sources = ['hsp','mae','hcm','ucm']
+source_dict = {
+    'hsp':'ccd_hsp',
+    'mae':'maestro',
+    'hcm':'hipercam',  # Currently supports HiPERCAM pipeline output v1.2.0
+    'ucm':'ultracam'   # Currently supports ULTRACAM pipeline output v19/12/2005
+}
 
 # Check that photometry source is valid
 psource = args.source
@@ -196,6 +215,15 @@ else:
     for code in valid_sources:
         print("   {} = {}".format(code,source_dict[code]))
     print("")
+    sys.exit(1)
+
+# Check that base name for photometry output is valid
+photbase = args.photname.strip()
+if len(photbase) == 0:
+    print('\nERROR: Base name provided for photometry files is an empty string!\n')
+    sys.exit(1)
+if len(glob(f"{photbase}*")) == 0:
+    print(f'\nERROR: No photometry files with base name "{photbase}" found in current working directory!\n')
     sys.exit(1)
 
 # Set the barycorr parameter
@@ -232,12 +260,16 @@ plt.style.use('dark_background') # Sets default plot style
 #############################################################
 ## Start loading in data
 
-# Grab all of the runbase Photometry files
-if psource == 'hsp': # hsp_nd output
-    phot_names_raw = glob('runbase*')
-elif psource == 'mae': # maestro output
-    phot_names_raw = glob('counts*')
+# Grab all of the photometry output files
+phot_names_raw = glob(f'{photbase}*')
 Nf = len(phot_names_raw)
+if (psource in ['ucm','hcm']) & (Nf > 1):
+    print(f'\nERROR: Multiple photometry files found with base name "{photbase}":')
+    for fs in phot_names_raw:
+        print(f"       > {fs}")
+    print('       For ULTRA/HiPERCAM pipelines, only one photometry file can be used with phot2lc.\n')
+    sys.exit(1)
+
 
 # Grab all or just one of the FITS files
 if args.image is None:
@@ -247,27 +279,99 @@ else:
     fits_list = [args.image]
     num_fits = 1
 
+
 # Get apeture sizes from filenames
-ap_sizes_raw = [float(f.split("/")[-1][7:]) for f in phot_names_raw]
+if psource in ['hsp','mae']:
+    ap_sizes_raw = [float(f.split("/")[-1][7:]) for f in phot_names_raw]
+elif psource in ['hcm','ucm']:
+    ap_sizes_raw = [-1]
 
 # Use ap_sizes to sort the phot_names list
 ap_sizes = sorted(ap_sizes_raw)
 phot_names = [f for _,f in sorted(zip(ap_sizes_raw,phot_names_raw))]
 
-# Get object locations from 'phot_coords.orig' file
-try:
-    tloc = np.loadtxt(tloc_name,usecols=(0,1))
-except:
-    tloc = np.array([])
 
 # Load in the Photometry for each aperture size
-phot_data = [pd.read_csv(f,header=None,delim_whitespace=True).iloc[:,1:].astype('float64') 
-             for f in phot_names]
-             
+if psource in ['hsp','mae']:
+    phot_data = [pd.read_csv(f,header=None,delim_whitespace=True).iloc[:,1:].astype('float64') 
+                 for f in phot_names]
+elif psource == 'hcm':
+
+    # Get column names and rows to skip
+    skip_rows = []
+    with open(phot_names[0]) as f:
+        start_row = -10
+        for i,l in enumerate(f.readlines()):
+            if 'Start of column name definitions' in l:
+                start_row = i
+            if (i == start_row+2):
+                colnames = l.split("=")[1].strip().split(" ")
+            if l[0] == "#":
+                skip_rows.append(i)
+
+    df = pd.read_csv(
+        phot_names[0],
+        header=None,
+        delim_whitespace=True,
+        names=colnames,
+        skiprows=skip_rows
+    )
+
+    # Remove any rows containing NaN-valued counts
+    check_columns = [c for c in df.columns if "counts_" in c]
+    df = df.dropna(subset=check_columns).reset_index(drop=True)
+
+    phot_data = [df]
+
+elif psource == 'ucm':
+
+    # Load in the data
+    skip_rows = []
+    with open(phot_names[0]) as f:
+        for i,l in enumerate(f.readlines()):
+            if l[0] == "#":
+                skip_rows.append(i)
+            else:
+                break
+    df = pd.read_csv(phot_names[0],
+        header=None, delim_whitespace=True, skiprows=skip_rows)
+    Nphotobj = int((len(df.columns)-7)/14)
+
+    # Generate column names that are consistent with HiPERCAM colnames
+    baseColnames = [
+    	'name','MJD','MJDok','Exptim',
+    	'CCD','mfwhm','mbeta'
+    ]
+    objColnames = [
+    	'naper','x','y','xm','ym','exm','eym',
+    	'counts','countse','sky','nsky','nrej',
+    	'worst','flag'
+    ]
+
+    allobjColnames = [
+    	['{}_{}'.format(cname,x+1) for cname in objColnames] 
+    	for x in range(Nphotobj)
+    ]
+    colnames = baseColnames + list(itertools.chain.from_iterable(allobjColnames))
+    df.columns = colnames
+
+    # Remove any rows containing NaN-valued counts
+    check_columns = [c for c in df.columns if "counts_" in c]
+    df = df.dropna(subset=check_columns).reset_index(drop=True)
+
+    phot_data = [df]
+
+
+
+          
 if psource == 'hsp':
     Nobj = len(phot_data[0].columns) - 1  # Number of stars (last column is sky)
 elif psource == 'mae':
     Nobj = int(len(phot_data[0].columns)/2)
+elif psource == 'hcm':
+    Nobj = int((len(phot_data[0].columns)-7)/16)
+elif psource == 'ucm':
+    Nobj = int((len(phot_data[0].columns)-7)/14)
 Ndat = len(phot_data[0])  # Number of data points
 
 
@@ -284,38 +388,121 @@ if os.path.exists('phot2lc_log.txt'):
 ## Get some basic info about the object
 
 # Pulls some basic info out of the header
-hdr = fits.getheader(fits_list[0])
 telescope = teldict['telename']
 instrument = teldict['instname']
-observer = hdr[teldict['observer']]
-filter_name = hdr[teldict['filter']]
-if args.object is None:
-    obj_name = hdr[teldict['objname']].replace(" ","")
-    if obj_name is None:
-        print("Error! Object Name in teledat.py cannot be None.")
-        sys.exit(1)
-else:
-    obj_name = args.object
+
+if psource in ['hsp','mae','hcm']:
+    hdr = fits.getheader(fits_list[0])
+    observer = hdr[teldict['observer']]
+    filter_name = hdr[teldict['filter']]
+    if args.object is None:
+        obj_name = hdr[teldict['objname']].replace(" ","")
+        if obj_name is None:
+            print("Error! Object Name in teledat.py cannot be None.")
+            sys.exit(1)
+    else:
+        obj_name = args.object
+elif psource == 'ucm':
+    _,hdr = read_ucm(fits_list[0])
+    observer = hdr['Observer'][0]
+    filter_name = hdr['Filter'][0]
+    if args.object is None:
+        obj_name = hdr['Object'][0].replace(" ","")
+        if obj_name is None:
+            print("Error! Object Name in teledat.py cannot be None.")
+            sys.exit(1)
+    else:
+        obj_name = args.object
+
+if len(obj_name) == 0:
+    print('\nError! Object name is an empty string. Please provide valid object name.\n')
+    sys.exit(1)
+
+
+# Get object locations from "tloc" file
+if psource in ['hsp','mae']:
+    try:
+        tloc = np.loadtxt(tloc_name,usecols=(0,1))
+    except:
+        tloc = np.array([])
+
+elif (psource == 'hcm'):
+    try:
+        with open(tloc_name) as fp:
+            aper_data = json.load(fp)
+    except:
+        tloc = np.array([])
+        pass
+
+    # Currently this only handles single-CCD Hipercam pipeline output
+    hcm_first_file = fits_list[0]
+    if hcm_first_file.split(".")[-1] != "hcm":
+        print(f'Error! Input image {hcm_first_file} is not a .hcm file.')
+        sys.exit()
+
+    hcm_hdr = fits.getheader(hcm_first_file,1)
+    aper_data = aper_data[1][1][1:]
+    Naper = len(aper_data)
+    tloc = np.zeros((Naper,2))
+    for i,ad in enumerate(aper_data):
+        tloc[i,0] = ad[1]['x']/float(hcm_hdr['XBIN'])
+        tloc[i,1] = ad[1]['y']/float(hcm_hdr['YBIN'])
+
+elif psource == 'ucm':
+    try:
+        aper_data = []
+        with open(tloc_name) as fp:
+            for fl in fp.readlines():
+                if fl[0] == 'x':
+                    aper_data.append(fl.strip("\n"))
+    except:
+        tloc = np.array([])
+        pass
+
+    # Currently this only handles single-CCD Ultracam pipeline output
+    ucm_first_file = fits_list[0]
+    if ucm_first_file.split(".")[-1] != "ucm":
+        print(f'Error! Input image {ucm_first_file} is not a .ucm file.')
+        sys.exit()
+
+    _,ucm_hdr = read_ucm(ucm_first_file)
+    Naper = len(aper_data)
+    tloc = np.zeros((Naper,2))
+    for i,ad in enumerate(aper_data):
+        xy = ad.split(";")[0].split("=")[-1].strip().split(",")
+        xyoff = ad.split(";")[1].split("=")[-1].strip().split(",")
+        tloc[i,0] = float(xy[0].strip()) + float(xyoff[0].strip())
+        tloc[i,1] = float(xy[1].strip()) + float(xyoff[1].strip())
 
 
 # Check to make sure this object has an entry in stars.dat file
 star_dat = pd.read_csv(star_dat_filename,header=None,delim_whitespace=True,dtype=str)
 obj_idx = star_dat.index[star_dat.iloc[:,0] == obj_name]
 if len(obj_idx) == 0:
-    print("\nWARNING: No objects by name of {} found in 'stars.dat'\n".format(obj_name))
+    print("\nWARNING: No objects by name of '{}' found in '{}'\n".format(
+    	obj_name,star_dat_filename)
+    )
     sys.exit(1)
 elif len(obj_idx) > 1:
-    print("\nWARNING: Multiple entries for {} found in 'stars.dat'\n".format(obj_name))
+    print("\nWARNING: Multiple entries for '{}' found in '{}'\n".format(
+    	obj_name,star_dat_filename)
+    )
     sys.exit(1)
 
 
 #############################################################
 # Show the first image along with marked targets/comps
 # Get Data & Header Info for first image
-if telcode == 'mcd2':
-    image0 = fits.getdata(fits_list[0])[0]
+if psource == 'ucm':
+    image0,_ = read_ucm(fits_list[0])
 else:
-    image0 = fits.getdata(fits_list[0])
+    if telcode == 'mcd2':
+        if psource == 'hcm':
+            image0 = fits.getdata(fits_list[0])
+        else:
+            image0 = fits.getdata(fits_list[0])[0]
+    else:
+        image0 = fits.getdata(fits_list[0])
 imrows,imcols = np.shape(image0)
 
 # Get Z-Scale Normalization vmin and vmax
@@ -350,15 +537,26 @@ im.imshow(image0, cmap='gray',vmin=vmin0, vmax=vmax0)
 # Plot marker for each object
 for i in range(len(tloc)):
     if i == 0:
-        im.plot(tloc[i,0],tloc[i,1],
-                ls='None',marker='o',ms=13,mew=2.0,mec='c',mfc='None')
-        im.text(tloc[i,0],tloc[i,1]+0.055*imrows,'Target',
-                ha='center',fontsize=12,**fonta)
+        im.plot(
+        	tloc[i,0],tloc[i,1],
+            ls='None',marker='o',ms=13,
+            mew=2.0,mec='c',mfc='None'
+        )
+        im.text(
+        	tloc[i,0],tloc[i,1]+0.055*imrows,
+        	'Target',ha='center',fontsize=12,**fonta
+        )
     else:
-        im.plot(tloc[i,0],tloc[i,1],
-                ls='None',marker='o',ms=13,mew=2.0,mec='m',mfc='None')
-        im.text(tloc[i,0],tloc[i,1]+0.055*imrows,'Comp {}'.format(i),
-                ha='center',fontsize=12,**fonta)
+        im.plot(
+        	tloc[i,0],tloc[i,1],
+            ls='None',marker='o',ms=13,
+            mew=2.0,mec='m',mfc='None'
+        )
+        im.text(
+        	tloc[i,0],tloc[i,1]+0.055*imrows,
+        	'Comp {}'.format(i),
+            ha='center',fontsize=12,**fonta
+        )
 
 # Make Axes invisible
 plt.axis("off")
@@ -402,14 +600,21 @@ cidim = imfig.canvas.mpl_connect('key_press_event', on_event_im)
 
 # If no previous log exists, generate time stamps from FITS images
 if not log_exists:
-    # Time stamp for first exposure
-    dt_zero_start,texp = get_time(fits_list[0],teldict)
 
-    # Convert dates & times to ISOT format for Astropy Time
-    dt_zero_mid = dt_zero_start + TimeDelta(texp/2.0,format='sec')
+    if psource in ['hsp','mae']:
+        # Time stamp for first exposure
+        dt_zero_start,texp = get_time(fits_list[0],teldict)
+        # Convert dates & times to ISOT format for Astropy Time
+        dt_zero_mid = dt_zero_start + TimeDelta(texp/2.0,format='sec')
+    elif psource in ['hcm','ucm']:
+        texp = phot_data[0].Exptim.median()
+        dt_zero_mid = Time(phot_data[0].MJD.min(),format='mjd',scale='utc')
+        dt_zero_start = dt_zero_mid - TimeDelta(texp/2.0,format='sec')
 
     if psource == 'mae':
         time_stamps = np.loadtxt(phot_names[0])[:,0]*86400.
+    elif psource in ['hcm','ucm']:
+        time_stamps = (phot_data[0].MJD.values - phot_data[0].MJD.min()) * 86400.
     elif psource == 'hsp':
         if num_fits == 1:
             time_stamps = np.arange(Ndat,dtype=float)*texp
@@ -440,18 +645,27 @@ if not log_exists:
 
 # If a log does exist, use it to generate the time stamps
 elif log_exists:
-    # First check whether the first image still exists
-    # If so, get the first timestamp from there
-    if os.path.exists(fits_list[0]):
-        dt_zero_start,texp = get_time(fits_list[0],teldict)
-        dt_zero_mid = dt_zero_start + TimeDelta(texp/2.0,format='sec')
-        time_stamps = log_data[:,0]
-    else:
+    if psource in ['hsp','mae']:
+        # First check whether the first image still exists
+        # If so, get the first timestamp from there
+        if os.path.exists(fits_list[0]):
+            dt_zero_start,texp = get_time(fits_list[0],teldict)
+            dt_zero_mid = dt_zero_start + TimeDelta(texp/2.0,format='sec')
+            time_stamps = log_data[:,0]
+        else:
+            dt_zero_mid_str = log_header[2][0].split("=")[-1].strip()
+            texp = float(log_header[4][0].split("=")[-1].strip())
+            dt_zero_mid = Time(dt_zero_mid_str, scale='utc',format='isot')
+            dt_zero_start = dt_zero_mid - TimeDelta(texp/2.0,format='sec')
+            time_stamps = log_data[:,0]
+    elif psource in ['hcm','ucm']:
         dt_zero_mid_str = log_header[2][0].split("=")[-1].strip()
         texp = float(log_header[4][0].split("=")[-1].strip())
         dt_zero_mid = Time(dt_zero_mid_str, scale='utc',format='isot')
+        dt_zero_start = dt_zero_mid - TimeDelta(texp/2.0,format='sec')
         time_stamps = log_data[:,0]
-    print('')
+
+print('')
 
 
 #############################################################
@@ -476,6 +690,8 @@ if psource == 'hsp':
     sky_flux = phot_data[ap4_loc][Nobj+1]
 elif psource == 'mae':
     sky_flux = phot_data[ap4_loc][2]
+elif psource in ['hcm','ucm']:
+    sky_flux = phot_data[0].sky_1 * (np.pi*(phot_data[0].mfwhm**2))
 sky_norm = sky_flux / sky_flux.mean()
 ax_LC.plot(time_stamps,(sky_norm - min(sky_norm))/max(sky_norm - min(sky_norm)),
            ls='None',marker='.',ms=3,mfc='#3C87FA',mec='#3C87FA')
@@ -486,6 +702,10 @@ if psource == 'hsp':
     comp_ids = list(range(2,Nobj+1))
 elif psource == 'mae':
     comp_ids = list(range(3,2*Nobj,2))
+elif psource in ['hcm','ucm']:
+    comp_ids = [f'counts_{x}' for x in range(2,Nobj+1)]
+    count_ids = ['counts_1'] + comp_ids
+
 
 if not log_exists:
     comp_select = comp_ids.copy()
@@ -494,6 +714,8 @@ elif log_exists:
         comp_select = [int(x)+1 for x in log_header[3][0].split("=")[-1].split("+")]
     elif psource == 'mae':
         comp_select = [2*int(x)+1 for x in log_header[3][0].split("=")[-1].split("+")]
+    elif psource in ['hcm','ucm']:
+        comp_select = [f'counts_{int(x)+1}' for x in log_header[3][0].split("=")[-1].split("+")]
 
 # Plot Stellar Flux
 for i in range(Nobj):
@@ -501,6 +723,8 @@ for i in range(Nobj):
         norm = phot_data[ap4_loc][i+1] / phot_data[ap4_loc][i+1].mean()
     elif psource == 'mae':
         norm = phot_data[ap4_loc][2*i+1] / phot_data[ap4_loc][2*i+1].mean()
+    elif psource in ['hcm','ucm']:
+        norm = phot_data[0][f'counts_{i+1}'] / phot_data[0][f'counts_{i+1}'].mean()
     norm2 = (norm - min(norm))/max(norm - min(norm))
     ax_LC.plot(time_stamps,norm2 + Nobj-i+0.5,ls='None',marker='.',ms=3,
                mfc=dbk_clist[i],mec=dbk_clist[i])
@@ -522,6 +746,8 @@ for i in range(Nobj+1):
             lc_labelb = '{:.0f}'.format(phot_data[ap4_loc][i+1].mean())
         elif psource == 'mae':
             lc_labelb = '{:.0f}'.format(phot_data[ap4_loc][2*i+1].mean())
+        elif psource in ['hcm','ucm']:
+            lc_labelb = '{:.0f}'.format(phot_data[0]['counts_1'].mean())
         lc_color = dbk_clist[i]
         ax_LC.text(xloc,float(Nobj+1-i)-0.00,lc_labela,
                    fontsize=13,color=lc_color,**fonta)
@@ -533,6 +759,8 @@ for i in range(Nobj+1):
             lc_labelb = '{:.0f}'.format(phot_data[ap4_loc][i+1].mean())
         elif psource == 'mae':
             lc_labelb = '{:.0f}'.format(phot_data[ap4_loc][2*i+1].mean())
+        elif psource in ['hcm','ucm']:
+            lc_labelb = '{:.0f}'.format(phot_data[0][f'counts_{i+1}'].mean())
         lc_color = dbk_clist[i]
         ax_LC.text(xloc,float(Nobj+1-i)-0.00,lc_labela,
                    fontsize=13,color=lc_color,**fonta)
@@ -597,8 +825,12 @@ bx_comp.tick_params(which='both',axis='both',labelbottom=False,direction='in',
 
 # Initialize the plot
 apnum = 0   # First Aperture
-phot_target = phot_data[apnum][1].replace(0.0,1.0).values
-phot_comps = np.sum(phot_data[apnum][comp_select].replace(0.0,1.0).values,axis=1)
+if psource in ['hsp','mae']:
+    phot_target = phot_data[apnum][1].replace(0.0,1.0).values
+    phot_comps = np.sum(phot_data[apnum][comp_select].replace(0.0,1.0).values,axis=1)
+elif psource in ['hcm','ucm']:
+    phot_target = phot_data[0]['counts_1'].replace(0.0,1.0).values
+    phot_comps = np.sum(phot_data[0][comp_select].replace(0.0,1.0).values,axis=1)
 
 # If Phot2lc has not been previously run, use default initialization
 if not log_exists:
@@ -623,8 +855,14 @@ dlc_init_all,_,_,_ = div_lc(time_stamps,phot_target,phot_comps,
                             polypack,list(range(Ndat)),[])
 
 # Create version with points deleted if specified
-dlc_init,dellc_init,draw_init,mod_init = div_lc(time_stamps,phot_target,phot_comps,
-                                                polypack,keep_ind,dele_ind)
+dlc_init, dellc_init, draw_init, mod_init = div_lc(
+    time_stamps,
+    phot_target,
+    phot_comps,
+    polypack,
+    keep_ind,
+    dele_ind
+)
 
 
 # Plot Light Curve
@@ -848,8 +1086,12 @@ def dlc_update(kx,ky,dx,dy,polyinfo,aper):
     keep_ind = [np.where(time_stamps == k)[0][0] for k in kx]
 
     # Calculate new divided light curve
-    phot_target = phot_data[aper][1].replace(0.0,1.0).values
-    phot_comps = np.sum(phot_data[aper][comp_select].replace(0.0,1.0).values,axis=1)
+    if psource in ['hsp','mae']:
+        phot_target = phot_data[aper][1].replace(0.0,1.0).values
+        phot_comps = np.sum(phot_data[aper][comp_select].replace(0.0,1.0).values,axis=1)
+    elif psource in ['hcm','ucm']:
+        phot_target = phot_data[0]['counts_1'].replace(0.0,1.0).values
+        phot_comps = np.sum(phot_data[0][comp_select].replace(0.0,1.0).values,axis=1)
     klc,dlc,kraw,kmod = div_lc(time_stamps,phot_target,phot_comps,
                                polyinfo,keep_ind,dele_ind)
 
@@ -1168,7 +1410,7 @@ def on_event_b(event):
 
         # Make sure none of the given numbers exceed the number of comps
         # and that the number of comps selected also does not exceed this #
-        if any([i >= max(comp_ids)-1 for i in new_comp_ind]):
+        if any([i > Nobj-1 for i in new_comp_ind]):
             print('WARNING: Comps ID(s) exceeds number of comps.')
         elif len(new_comp_ind) > len(comp_ids):
             print('WARNING: More Comps ID(s) Supplied than number of comps.')
@@ -1309,33 +1551,48 @@ def on_event_b(event):
         print_commands()
 
 # Setup the rectangle selectors, start them off as deactivated
-rect_garbage = dict(facecolor='#FFFF00',edgecolor = '#FFFF00',
-                    alpha=0.4, fill=True)
-rect_zoom = dict(facecolor='#6DA1F0',edgecolor = '#6DA1F0',
-                 alpha=0.4, fill=True)
-toggle_garbage.RS = RectangleSelector(bx_LC, garbage_select, 
-                                       props=rect_garbage,
-                                       useblit=True,
-                                       button=[1],  # Left click only
-                                       minspanx=5, minspany=5,
-                                       spancoords='pixels',
-                                       interactive=False)
-
-toggle_reverse_garbage.RS = RectangleSelector(bx_LC, reverse_garbage_select, 
-                                       props=rect_garbage,
-                                       useblit=True,
-                                       button=[1],  # Left click only
-                                       minspanx=5, minspany=5,
-                                       spancoords='pixels',
-                                       interactive=False)
-
-toggle_zoom.RS = RectangleSelector(bx_LC, zoom_select, 
-                                       props=rect_zoom,
-                                       useblit=True,
-                                       button=[1],  # Left click only
-                                       minspanx=5, minspany=5,
-                                       spancoords='pixels',
-                                       interactive=False)
+rect_garbage = dict(
+    facecolor='#FFFF00',
+    edgecolor = '#FFFF00',
+    alpha=0.4, 
+    fill=True
+)
+rect_zoom = dict(
+    facecolor='#6DA1F0',
+    edgecolor = '#6DA1F0',
+    alpha=0.4, 
+    fill=True
+)
+toggle_garbage.RS = RectangleSelector(
+    bx_LC, garbage_select, 
+    props=rect_garbage,
+    useblit=True,
+    button=[1],  # Left click only
+    minspanx=5, 
+    minspany=5,
+    spancoords='pixels',
+    interactive=False
+)
+toggle_reverse_garbage.RS = RectangleSelector(
+    bx_LC, reverse_garbage_select, 
+    props=rect_garbage,
+    useblit=True,
+    button=[1],  # Left click only
+    minspanx=5, 
+    minspany=5,
+    spancoords='pixels',
+    interactive=False
+)
+toggle_zoom.RS = RectangleSelector(
+    bx_LC, zoom_select, 
+    props=rect_zoom,
+    useblit=True,
+    button=[1],  # Left click only
+    minspanx=5, 
+    minspany=5,
+    spancoords='pixels',
+    interactive=False
+)
 toggle_garbage.RS.set_active(False)
 toggle_reverse_garbage.RS.set_active(False)
 toggle_zoom.RS.set_active(False)
@@ -1361,7 +1618,10 @@ lc_all = []
 pp_all = []
 for i in range(Nf):
     # Calculate divided LC and point-2-point scatter
-    phot_t = phot_data[i][1].replace(0.0,1.0).values
+    if psource in ['hsp','mae']:
+        phot_t = phot_data[i][1].replace(0.0,1.0).values
+    elif psource in ['hcm','ucm']:
+        phot_t = phot_data[i]['counts_1'].replace(0.0,1.0).values
     phot_c = np.sum(phot_data[i][comp_select].replace(0.0,1.0).values,axis=1)
     lc,_,_,_ = div_lc(time_stamps,phot_t,phot_c,polypack,keep_ind,dele_ind)
     pp = pp_scat(lc)
@@ -1391,7 +1651,10 @@ if grid_search:
         lc_aper = []
         pp_aper = []
         for j in range(Nf):
-            phot_t = phot_data[j][1].replace(0.0,1.0).values
+            if psource in ['hsp','mae']:
+                phot_t = phot_data[j][1].replace(0.0,1.0).values
+            elif psource in ['hcm','ucm']:
+                phot_t = phot_data[j]['counts_1'].replace(0.0,1.0).values
             phot_c = np.sum(phot_data[j][all_combs[i]].replace(0.0,1.0).values,axis=1)
             lc,_,_,_ = div_lc(time_stamps,phot_t,phot_c,polypack,keep_ind,dele_ind)
             pp = pp_scat(lc)
@@ -1410,7 +1673,10 @@ if grid_search:
     # the optimal selection of combination stars
     pp_all_grid = []
     for i in range(Nf):
-        phot_t = phot_data[i][1].replace(0.0,1.0).values
+        if psource in ['hsp','mae']:
+            phot_t = phot_data[i][1].replace(0.0,1.0).values
+        elif psource in ['hcm','ucm']:
+            phot_t = phot_data[i]['counts_1'].replace(0.0,1.0).values
         phot_c = np.sum(phot_data[i][all_combs[ind_comb_min]].replace(0.0,1.0).values,axis=1)
         lc,_,_,_ = div_lc(time_stamps,phot_t,phot_c,polypack,keep_ind,dele_ind)
         pp = pp_scat(lc)
@@ -1477,7 +1743,11 @@ else:
     ppupp = max(pp_all)
 ppdiff = ppupp - pplow
 cx_pp.set_xlim(min(ap_sizes)-0.4 ,max(ap_sizes)+0.4)
-cx_pp.set_ylim(pplow-0.2*ppdiff, ppupp+0.2*ppdiff)
+if ppdiff > 0:
+    cx_pp.set_ylim(pplow-0.2*ppdiff, ppupp+0.2*ppdiff)
+else:
+    cx_pp.set_ylim(pplow-0.2, pplow+0.2)
+
 
 # Plot Light Curve from Optimal Apertured
 lcplot1, = cx_lc.plot(time_stamps[keep_ind],lc_all[ind_ppmin],ls='-',lw=0.75,c='#FFFFFF88',
@@ -1729,19 +1999,22 @@ else:
 # Function to Calculate Error Bars and S/N
 def calc_err(phot,aper):
     """
-    phot = raw aperture phtometry for all objects
+    phot = raw aperture phtometry for all objects + sky
     aper = Aperture radius in pixels
     """
 
-    # CCD Noise Characteristics
-    aper_area = np.pi*aper**2  # Number of pixels within aperture
+    # Aperture area
+    aper_area = np.pi*aper**2
     
     # Add object & sky counts
     object_phot = phot[:,0]
+    comp_phot = np.sum(phot[:,1:-1],axis=1)
     sky_phot = phot[:,-1]
     obj_sky = object_phot+sky_phot
+    mean_ratio = np.nanmean(object_phot / comp_phot)
+
     
-    # Combine all sources of noise
+    # CCD noise characteristics, if available
     if np.isnan(dark):
         dark_noise = 0.0
     else:
@@ -1751,9 +2024,30 @@ def calc_err(phot,aper):
         read_noise = 0.0
     else:
         read_noise = (read/gain)**2*aper_area
+
+    # Combine all noise sources
     noise = np.sqrt(obj_sky + dark_noise + read_noise)
     snr = object_phot/noise
-    return snr,noise
+
+    # Normalize the noise
+    norm_noise = noise / comp_phot / mean_ratio
+
+    return snr, norm_noise
+
+def calc_err_hcm(phot,photerr):
+    """
+    phot = raw aperture phtometry for all objects
+    photerr = Raw flux error of target
+    """
+
+    object_phot = phot[:,0]
+    comp_phot = np.sum(phot[:,1:-1],axis=1)
+    mean_ratio = np.nanmean(object_phot / comp_phot)
+
+    norm_noise = photerr / comp_phot / mean_ratio
+
+    return norm_noise
+
 
 
 #################################################################
@@ -1768,22 +2062,48 @@ if save_user:
     comp_number = len(comp_select)
     comp_ids = comp_str1
     opt_pp = pp_all[ind_ppmin]
-    snr,_ = calc_err(phot_data[ind_ppmin].iloc[keep_ind,:].values,opt_ap)
-    err = 1./snr
+    if psource in ['hsp','mae']:
+        phot_index = [1] + comp_select + [Nobj+1]
+        snr,err = calc_err(phot_data[ind_ppmin][phot_index].iloc[keep_ind,:].values,opt_ap)
+        lc_std = roll_std(lc_all[ind_ppmin],20)
+    elif psource in ['hcm','ucm']:
+        phot_index = ['counts_1'] + comp_select
+        err = calc_err_hcm(phot_data[0][phot_index].iloc[keep_ind,:].values,
+            phot_data[0]['countse_1'].iloc[keep_ind].values)
+
 else:
     opt_ind = ind_aper[ind_comb_min]
     opt_ap = apmin_auto
     comp_number = len(all_combs[ind_comb_min])
     comp_ids = comp_str2
     opt_pp = pp_comb[ind_comb_min]
-    snr,_ = calc_err(phot_data[ind_aper[ind_comb_min]].iloc[keep_ind,:].values,opt_ap)
-    err = 1./snr
+    if psource in ['hsp','mae']:
+        phot_index = [1] + all_combs[ind_comb_min] + [Nobj+1]
+        snr,err = calc_err(phot_data[ind_aper[ind_comb_min]].iloc[keep_ind,:].values,opt_ap)
+        lc_std = roll_std(lc_comb[ind_comb_min],20)
+    elif psource in ['hcm','ucm']:
+        phot_index = ['counts_1'] + all_combs[ind_comb_min]
+        err = calc_err_hcm(phot_data[0][phot_index].iloc[keep_ind,:].values,
+            phot_data[0]['countse_1'].iloc[keep_ind].values)
+
+# To try and generate flux uncertainties that are not over
+# or under estimated, a correction factor is applied here so
+# that the average uncertainty value matches the standard
+# deviation (SD) of the light curve. The SD is calculated
+# averaging all of the SD values calculated within a sliding 
+# window of width 20 data points. Thishelps to reduce the 
+# impact of photometric variability on the SD measurement.
+if psource in ['hsp','mae']:
+    avg_err = np.nanmean(err)
+    err_corrfac = lc_std / avg_err
+    err*=err_corrfac
+
 
 # Define the BJED header entry beforehand:
 if barycorr:
-    bjed_entry = '\nBJED       = {:<30.9f}# Mid Exp. Barycentric Julian Date'.format(bjdref.value)
+    bjed_entry = '\nBJED       = {:<30.9f}# Mid Exposure BJD-TDB at T0'.format(bjdref.value)
 else:
-    bjed_entry = '\nBJED       = {:30s}# Mid Exp. Barycentric Julian Date'.format('None')
+    bjed_entry = '\nBJED       = {:30s}# Mid Exposure BJD-TDB at T0'.format('None')
 
 # Header for the raw photometry file
 rawphot_header = 'Object     = {:30s}# Name of Object'.format(obj_name) + \
@@ -1792,9 +2112,10 @@ rawphot_header = 'Object     = {:30s}# Name of Object'.format(obj_name) + \
     '\nTelescope  = {:30s}# Name of Telescope'.format(telescope) + \
     '\nInstrument = {:30s}# Name of Instrument'.format(instrument) + \
     '\nTeleCode   = {:30s}# Teledat Code Name'.format(telcode) + \
-    '\nDate       = {:30s}# Mid-Exp. UTC Start Date'.format(st.split("T")[0]) + \
-    '\nTime       = {:30s}# Mid-Exp. UTC Start Time'.format(st.split("T")[1]) + \
-    '\nMJD        = {:<30.9f}# Mid Exposure UTC MJD Start'.format(st_mjd) + \
+    '\nObserver   = {:30s}# Name of Observer'.format(observer) + \
+    '\nDate       = {:30s}# Mid-Exposure UTC Date at T0'.format(st.split("T")[0]) + \
+    '\nTime       = {:30s}# Mid-Exposure UTC Time at T0'.format(st.split("T")[1]) + \
+    '\nMJD        = {:<30.9f}# Mid-Exposure UTC MJD at T0'.format(st_mjd) + \
     '\nExptime    = {:<30.6f}# Exposure Time (s)'.format(texp) + \
     '\nFilter     = {:30s}# Filter Name'.format(filter_name) + \
     '{}'.format(bjed_entry) + \
@@ -1804,7 +2125,7 @@ rawphot_header = 'Object     = {:30s}# Name of Object'.format(obj_name) + \
     '\nApRadius   = {:<30.2f}# Aperture Radius (pixels)'.format(opt_ap) + \
     '\nNkeep      = {:<30d}# Number of points in light curve '.format(len(keep_ind)) + \
     '\nNdelete    = {:<30d}# Number of points removed'.format(len(dele_ind)) + \
-    '\nColumns: Time (s), Target, Comparisons, Sky' 
+    '\nColumns: Time since T0 (s), Target, Comparisons, Sky' 
 
 # Header for the final lightcurve
 lcfin_header = 'Object     = {:30s}# Name of Object'.format(obj_name) + \
@@ -1813,6 +2134,7 @@ lcfin_header = 'Object     = {:30s}# Name of Object'.format(obj_name) + \
     '\nTelescope  = {:30s}# Name of Telescope'.format(telescope) + \
     '\nInstrument = {:30s}# Name of Instrument'.format(instrument) + \
     '\nTeleCode   = {:30s}# Teledat Code Name'.format(telcode) + \
+    '\nObserver   = {:30s}# Name of Observer'.format(observer) + \
     '\nDate       = {:30s}# Mid-Exposure UTC Date at T0'.format(st.split("T")[0]) + \
     '\nTime       = {:30s}# Mid-Exposure UTC Time at T0'.format(st.split("T")[1]) + \
     '\nMJD        = {:<30.9f}# Mid-Exposure UTC MJD at T0'.format(st_mjd) + \
@@ -1824,13 +2146,14 @@ lcfin_header = 'Object     = {:30s}# Name of Object'.format(obj_name) + \
     '\nOrigFile   = {:30s}# Source Photometry Filename'.format(phot_names[opt_ind]) + \
     '\nApRadius   = {:<30.2f}# Aperture Radius (pixels)'.format(opt_ap) + \
     '\nAvgScatter = {:<30.2f}# Avg. Point-to-Point Scatter (%)'.format(opt_pp) + \
-    '\nComps      = {:<30d}# Comparison stars used'.format(comp_number) + \
+    '\nNComps     = {:<30d}# Number of Comparison stars used'.format(comp_number) + \
+    '\nCompIDs    = {:30s}# IDs of Comparison stars used'.format(comp_ids.replace("+",",")) + \
     '\nPolyOrder  = {:<30d}# Degree of Polynomial Division'.format(polypack[0]) + \
     '\nNkeep      = {:<30d}# Number of points in light curve '.format(len(keep_ind)) + \
     '\nNdelete    = {:<30d}# Number of points removed'.format(len(dele_ind)) + \
     '\nAuthor     = {:30s}# Author of this light curve'.format(author) + \
     '\nCreatedOn  = {:30s}# Date created'.format(Time.now().to_value("iso")) + \
-    '\nColumns: Time (s), Relative Flux, Relative Flux Error' 
+    '\nColumns: Time since T0 (s), Relative Flux, Relative Flux Error' 
 
 # Header for the raw photometry file
 log_header = '    OBJECT = {}'.format(obj_name) + \
@@ -1865,6 +2188,13 @@ if save_user:
             output_phot = np.concatenate((bjdtimes_saved,phot_saved,sky_saved),axis=1)
         else:
             output_phot = np.concatenate((rawtimes_saved,phot_saved,sky_saved),axis=1)
+    elif psource in ['hcm','ucm']:
+        phot_saved = phot_data[0][count_ids].iloc[keep_ind,:].values
+        sky_saved = np.reshape(sky_flux[keep_ind].values,(Ndat_keep,1))
+        if barycorr:
+            output_phot = np.concatenate((bjdtimes_saved,phot_saved,sky_saved),axis=1)
+        else:
+            output_phot = np.concatenate((rawtimes_saved,phot_saved,sky_saved),axis=1)
     lc_saved = np.reshape(lc_all[ind_ppmin],(Ndat_keep,1))
     if barycorr:
         output_lc = np.concatenate((bjdtimes_saved,lc_saved,lcerr_saved),axis=1)
@@ -1881,6 +2211,13 @@ else:
     elif psource == 'mae':
         phot_saved = phot_data[opt_ind].iloc[keep_ind,0:2*Nobj-1:2].values
         sky_saved = np.reshape(phot_data[opt_ind].iloc[keep_ind,1].values,(Ndat_keep,1))
+        if barycorr:
+            output_phot = np.concatenate((bjdtimes_saved,phot_saved,sky_saved),axis=1)
+        else:
+            output_phot = np.concatenate((rawtimes_saved,phot_saved,sky_saved),axis=1)
+    elif psource in ['hcm','ucm']:
+        phot_saved = phot_data[0][count_ids].iloc[keep_ind,:].values
+        sky_saved = np.reshape(sky_flux[keep_ind].values,(Ndat_keep,1))
         if barycorr:
             output_phot = np.concatenate((bjdtimes_saved,phot_saved,sky_saved),axis=1)
         else:

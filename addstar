@@ -1,0 +1,97 @@
+#!/usr/bin/env python
+
+import os
+import argparse
+import pandas as pd
+import astropy.units as u
+from astropy.coordinates import SkyCoord
+
+import phot2lc.teledat as teledat
+
+"""
+Script which adds a new object entry
+into the stars.dat file. Checks first
+whether an entry already exists.
+
+Author: 
+    Zach Vanderbosch
+
+For a description of updates, see the 
+version_history.txt file.
+
+"""
+
+parser = argparse.ArgumentParser()
+parser.add_argument('objectName',type=str,
+                    help="Name of object to add into stars.dat")
+parser.add_argument('ra',type=str,
+                    help="Object Right Ascension.")
+parser.add_argument('dec',type=str,
+                    help="Object Declination.")
+args = parser.parse_args()
+
+
+# Parse inputs
+objectname = args.objectName
+ra = args.ra
+dec = args.dec
+
+# Input coordinates to Astropy
+try:
+    ra_deg = float(ra)
+    dec_deg = float(dec)
+    coord = SkyCoord(
+        ra_deg, 
+        dec_deg, 
+        unit="deg",
+        frame="icrs"
+    )
+except:
+    try:
+        coord = SkyCoord(
+            ra, dec,
+            frame='icrs',
+            unit=(
+                u.hourangle,
+                u.degree
+            )
+        )
+    except:
+        print('Could not produce SkyCoord object from provided coordinates:')
+        print(f'  RA = {ra}')
+        print(f' Dec = {dec}')
+        exit(1)
+    
+
+# Oopen stars.dat file
+config_path = os.path.dirname(os.path.realpath(teledat.__file__))
+config_dat = []
+with open(config_path + "/config.dat") as f:
+    for l in f.readlines():
+        config_dat.append(l.strip("\n").split("=")[-1].strip())
+
+star_dat_file = config_dat[4]
+star_dat = pd.read_csv(
+    star_dat_file,
+    header=None,
+    delim_whitespace=True,
+    dtype=str
+)
+
+# Check that object isn't already in stars.dat
+match_idx = star_dat.index[star_dat.iloc[:,0] == objectname]
+if len(match_idx) > 0:
+    match_dat = star_dat.loc[match_idx].values[0]
+    print('Object already in stars.dat file:')
+    print(' ',*match_dat)
+    exit()
+
+# If no match, add to file
+ra_string = coord.to_string('hmsdms',sep=" ",precision=2)[0:11]
+de_string = coord.to_string('hmsdms',sep=" ",precision=2)[12:]
+new_line = "{}  {} {}\n".format(objectname,ra_string, de_string)
+with open(star_dat_file, 'a') as file:
+    file.write(new_line)
+print('\nAdded "{:s}" entry to stars.dat file.\n'.format(
+    new_line.strip("\n"))
+)

@@ -1,8 +1,9 @@
-author            = Zach Vanderbosch
-image_list_name   = olist
-pixloc_name       = phot_coords.orig
-stardat_location  = /Users/zvander/.wet/stars.dat
-default_telescope = mcd2
-default_source    = hsp
+author            = sys-user
+image_list_name   = hcm.lis
+pixloc_name       = aperture.ape
+photbase_name     = output
+stardat_location  = /home/zachvanderbosch/data/stars.dat
+default_telescope = p200
+default_source    = hcm
 default_image     = None
 default_object    = None

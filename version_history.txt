@@ -427,3 +427,153 @@ Version 1.7.0 - 2022-01-28
 > Changed the matplotlib backend to be system dependent for
   the quicklook program. QT5Agg was distorted on some
   Linux machines, switched to using TKAgg.
+  
+  
+  
+Version 1.7.1 - 2023-02-07
+--------------------------
+> Added support for the CHIMERA instrument on the Palomar
+  200-inch Hale Telescope.
+> Changed how error estimation is being performed. The
+  photometric noise is now being normalized using the
+  comparison star flux as a normalization factor. A 
+  scaling factor has also been introduced to help
+  reduce over/under estimation of errorbars. The scaling
+  factor is designed to make sure that the average 
+  1-sigma errorbar matches the standard deviation of the
+  light curve.
+> Added support for the HiPERCAM photometry pipeline:
+
+  Version 1.2.0
+  https://cygnus.astro.warwick.ac.uk/phsaap/hipercam/docs/html/index.html
+  
+  The photometry source parameter (source) defined in
+  the configuration file, or set on the command line
+  using the -s or --source option, can now be set to
+  "hcm". In this mode, it will assume that a file with
+  a name like output*log exists containing the raw 
+  photometry. It will also assume that a .hcm file needs
+  to be loaded in order to display the first image, and 
+  use a HiPERCAM aperture file (.ape) to display the
+  initial source aperture positions.
+  
+  Some caveats for handling HiPERCAM output include:
+    - Can only handle single-CCD output.log files. 
+      The HiPERCAM pipeline is designed to reduce
+      multiple CCDs simulatneously since the actual
+      HiPERCAM instrument is a 5-channel photometer,
+      but the phot2lc code is not yet designed to
+      parse multi-CCD output.
+    - So far it has only been tested for data acquired
+      from the McDonald 2.1m ProEM instrument or the 
+      Palomar 200-in CHIMERA instrument. Data from
+      from other instruments reduced using the
+      HiPERCAM pipeline may not yet play nice with phot2lc.
+      
+      
+ Version 1.7.2 - 2023-02-08
+---------------------------
+> Improved error messaging for missing object name
+  from the stars.dat file.
+> Improved header descriptions for the .lc and .phot files.
+    - Added new header row in .lc file listing the IDs of
+      comparison stars used to generate divided light curve.
+    - Added new header row in both .phot and .lc files 
+      naming the observer that acquired the data.
+    - Made description of BJED header entry more clear
+      in the .lc file.
+    - Made description of the Time column in both the 
+      .lc and .phot file more clear.
+> Added support for Ultracam pipeline output, version
+  19/12/2005. Since the ultracam pipeline requires
+  specially formatted image files (.ucm), an additional
+  script, ucm_utils.py, has been added to the package.
+  This script contains functions that can read and decode
+  the binary .ucm files, namely the read_ucm function. This 
+  code was taken and modified from Tom Marsh's ultracam 
+  pipeline package:
+  
+  https://github.com/trmrsh/trm-ultracam
+  
+  Such a function was not needed for the HiPERCAM .hcm
+  files, since these are basically just FITS files and
+  can easily be read with astropy.io.fits.
+  
+  The photometry source parameter (source) defined in
+  the configuration file, or set on the command line
+  using the -s or --source option, can now be set to
+  "ucm". Similar to the HiPERCAM option, it will assume 
+  that a file with a name like output*log exists containing 
+  the raw photometry. It will also assume that a .ucm file
+  needs to be loaded in order to display the first image,
+  and use an ULTRACAM aperture file (.ape) to display the
+  initial source aperture positions.
+
+
+ Version 1.7.3 (2023-02-09)
+---------------------------
+> Minor bug fixes
+
+
+ Version 1.7.4 (2023-04-28)
+---------------------------
+> Added new location info for the Tenerife site of the 
+  Las Cumbres Observatory 1.0-m telescopes.
+> Added new option for the config.dat file called
+  phot_basename, which allows users to specify the base
+  filename for the output from the photometry pipeline
+  being used (e.g. "runbase" for ccd_hsp or "output.log"
+  for ULTRA/HiPERCAM). There is also a new command line
+  option for phot2lc (-p, --photname), which allows users
+  to specify the basename at runtime or override whatever
+  the default value is in the config.dat file.
+> Added a new command line convenience program "addstar"
+  that allows users to add a new entry into the stars.dat
+  file. Example usage:
+      addstar SDSSJ0000+1111 00:00:00.0 +11:11:11.1
+
+ Version 1.7.5 (2023-04-28)
+---------------------------
+> Minor bug fixes
+
+
+ Version 1.7.6 (2023-05-02)
+---------------------------
+> Minor bug fixes in addstar
+
+
+ Version 1.7.7 (2023 May 4)
+---------------------------
+> Better handling of NaN values in HiPERCAM and 
+  ULTRACAM output.
+> Better information print out from the addstar 
+  command line function.
+
+
+ Version 1.7.8 (2023 May 16)
+----------------------------
+> Changed how the light curve "author" is handled. The
+  default now is to use your system username, which
+  happens when the "author" parameter in the config.dat
+  file is set to "sys-user". You can change this parameter
+  to any custom value you like by running the photconfig
+  script as usual, or there is now a command line option
+  -a/--author for phot2lc which allows you to override 
+  the value in the config.dat file, e.g.:
+  
+      phot2lc --author 'Zach Vanderbosch'
+      
+  This update makes it easier for multiple people to use
+  the same phot2lc installation, e.g. on a computer that
+  a whole research group may use to store and reduce 
+  their data. Now, different users no longer have to run
+  the photconfig script to change the author name in order
+  to get the correct author metadata into the .lc file.
+
+
+
+
+
+
+
+
