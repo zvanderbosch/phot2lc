@@ -23,9 +23,9 @@ version_history.txt file.
 header_format = {
     'nrows': 26,
     'mjd_idx': 9,
+    'filter_idx': 11,
     'bjd_idx': 12,
-    'bjdcorr_idx': 13,
-
+    'bjdcorr_idx': 13
 }
 
 # Generate arguments for command line parsing
@@ -108,6 +108,19 @@ else:
         # Grab Info From the Header
         mjd = float(h[header_format['mjd_idx']][0].split("=")[1].split("#")[0].strip())
         t0.append(mjd)
+
+# Get the Filter names for each LC
+filterNames = []
+for h in headers:
+    filt = h[header_format['filter_idx']][0].split("=")[1].split("#")[0].strip()
+    filterNames.append(filt)
+
+# Check whether input LCs are single or multi filter
+Nfilt = len(list(set(filterNames)))
+if Nfilt == 1:
+    header_filter = filterNames[0]
+else:
+    header_filter = 'multi_filter'
         
 
 # Now get all of the actual data
@@ -152,6 +165,7 @@ if corrected:
                 '\n{}'.format(headers[0][2][0].strip("# ")) + \
                 '\nDate       = {:30s}# Mid-Exposure TDB Date at T0'.format(date_start) + \
                 '\nTime       = {:30s}# Mid-Exposure TDB Time at T0'.format(time_start) + \
+                '\nFilter     = {:30s}# Filter Name'.format(header_filter) + \
                 '\nBJED       = {:<30.9f}# Mid-Exposure TDB JD at T0'.format(ref_time) + \
                 '\nBaryCorr   = {:30s}# Whether the times are barycentric corrected'.format('True') + \
                 '\nWeldNum    = {:<30d}# Number of files welded'.format(Nf) + \
@@ -165,6 +179,7 @@ else:
                 '\n{}'.format(headers[0][2][0].strip("# ")) + \
                 '\nDate       = {:30s}# Mid-Exposure UTC Date at T0'.format(date_start) + \
                 '\nTime       = {:30s}# Mid-Exposure UTC Time at T0'.format(time_start) + \
+                '\nFilter     = {:30s}# Filter Name'.format(header_filter) + \
                 '\nMJD        = {:<30.9f}# Mid-Exposure UTC MJD at T0'.format(ref_time) + \
                 '\nBaryCorr   = {:30s}# Whether the times are barycentric corrected'.format('False') + \
                 '\nWeldNum    = {:<30d}# Number of files welded'.format(Nf) + \
