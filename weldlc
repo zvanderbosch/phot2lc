@@ -19,6 +19,15 @@ For a description of updates, see the
 version_history.txt file.
 """
 
+# Define light curve file header style
+header_format = {
+    'nrows': 26,
+    'mjd_idx': 9,
+    'bjd_idx': 12,
+    'bjdcorr_idx': 13,
+
+}
+
 # Generate arguments for command line parsing
 parser = argparse.ArgumentParser(description='Provide Input & Output Filenames.')
 parser.add_argument('-f', '--infiles',type=str,nargs='*',
@@ -51,7 +60,13 @@ else:
 headers = []
 for f in filenames:
     print("  {}".format(f))
-    header = pd.read_csv(f,header=None,nrows=24,dtype=str,sep='*').values
+    header = pd.read_csv(
+        f,
+        header=None,
+        nrows=header_format['nrows'],
+        dtype=str,
+        sep='*'
+    ).values
     headers.append(header)
 
 
@@ -59,7 +74,7 @@ for f in filenames:
 # have been barycentric corrected or not
 corrs = []
 for h in headers:
-    bjdcorr = h[12][0].split("=")[1].split("#")[0].strip()
+    bjdcorr = h[header_format['bjdcorr_idx']][0].split("=")[1].split("#")[0].strip()
     corrs.append(bjdcorr == "True")
 
 # Set the "passed" keyword based on whether the input
@@ -85,13 +100,13 @@ t0 = []
 if corrected:
     for h in headers:
         # Grab Info From the Header
-        bjd = float(h[11][0].split("=")[1].split("#")[0].strip())
+        bjd = float(h[header_format['bjd_idx']][0].split("=")[1].split("#")[0].strip())
         t0.append(bjd)
 else:
     mjds = []
     for h in headers:
         # Grab Info From the Header
-        mjd = float(h[8][0].split("=")[1].split("#")[0].strip())
+        mjd = float(h[header_format['mjd_idx']][0].split("=")[1].split("#")[0].strip())
         t0.append(mjd)
         
 
