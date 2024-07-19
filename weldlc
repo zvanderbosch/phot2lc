@@ -195,14 +195,3 @@ lc_fname = args.outfile
 np.savetxt(lc_fname, output, fmt=lc_format, header=lc_header)
 
 print('Finished. Output saved as {}\n'.format(lc_fname))
-
-
-
-
-
-
-
-
-
-
-
