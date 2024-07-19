@@ -31,18 +31,20 @@ args = parser.parse_args()
 
 
 # Get list of filenames
-filenames = sorted(args.infiles)
-Nf = len(filenames)
-if Nf == 0:
-    print('\n0 Input Files provided, weldlc cannot proceed.')
-    print('Program exited.\n')
-    sys.exit(1)
-elif Nf == 1:
-    print('\nOnly 1 Input File provided, weldlc cannot proceed.')
+filenames = args.infiles
+if filenames is None:
+    print('\nNo Input Files provided, weldlc cannot proceed.')
     print('Program exited.\n')
     sys.exit(1)
 else:
-   print('\nWelding {} Files:'.format(Nf))
+    Nf = len(filenames)
+    if Nf == 1:
+        print('\nOnly 1 Input File provided, weldlc cannot proceed.')
+        print('Program exited.\n')
+        sys.exit(1)
+    else:
+        filenames = sorted(filenames)
+        print('\nWelding {} Files:'.format(Nf))
 
 
 # Grab the headers
