@@ -579,3 +579,8 @@ Version 1.8.0 (2024 July 31)
   pandas read_csv function calls, now using sep='\\s+'
 > Fixed all microhertz axis labels from '$\mu$' to '$\\mu$'
   to avoid syntax warnings.
+  
+  
+Version 1.8.1 (2024 July 31)
+----------------------------
+> Minor bug fixes.
