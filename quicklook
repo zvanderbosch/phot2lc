@@ -211,21 +211,21 @@ for file in filenames:
                 yloc = 0.83 - (float(i)*0.055)
                 if (p >= 600.) & (p < 3600.):
                     p = p/60. # Convert to minutes if >= 10 minutes
-                    ax1.text(0.55,yloc,'{}: {:7.1f} $\mu$Hz, {:5.2f} min, {:5.2f} %'.format(i+1,f*1e6,p,a*1e2),
+                    ax1.text(0.55,yloc,'{}: {:7.1f} $\\mu$Hz, {:5.2f} min, {:5.2f} %'.format(i+1,f*1e6,p,a*1e2),
                              fontsize=8,transform=ax1.transAxes,**font)
 
                 elif (p >= 3600.) & (p < 86400.):
                     p = p/3600. # Convert to hours if >= 1 hour
-                    ax1.text(0.55,yloc,'{}: {:7.1f} $\mu$Hz, {:5.2f} hr, {:5.2f} %'.format(i+1,f*1e6,p,a*1e2),
+                    ax1.text(0.55,yloc,'{}: {:7.1f} $\\mu$Hz, {:5.2f} hr, {:5.2f} %'.format(i+1,f*1e6,p,a*1e2),
                              fontsize=8,transform=ax1.transAxes,**font)
 
                 elif (p >= 86400.):
                     p = p/86400. # Convert to days if >= 1 day
-                    ax1.text(0.55,yloc,'{}: {:7.1f} $\mu$Hz, {:5.2f} d, {:5.2f} %'.format(i+1,f*1e6,p,a*1e2),
+                    ax1.text(0.55,yloc,'{}: {:7.1f} $\\mu$Hz, {:5.2f} d, {:5.2f} %'.format(i+1,f*1e6,p,a*1e2),
                              fontsize=8,transform=ax1.transAxes,**font)
 
                 else:
-                    ax1.text(0.55,yloc,'{}: {:7.1f} $\mu$Hz, {:5.1f} s, {:5.2f} %'.format(i+1,f*1e6,1./f,a*1e2),
+                    ax1.text(0.55,yloc,'{}: {:7.1f} $\\mu$Hz, {:5.1f} s, {:5.2f} %'.format(i+1,f*1e6,1./f,a*1e2),
                              fontsize=8,transform=ax1.transAxes,**font)
 
 

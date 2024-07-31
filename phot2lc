@@ -312,7 +312,7 @@ elif psource == 'hcm':
     df = pd.read_csv(
         phot_names[0],
         header=None,
-        delim_whitespace=True,
+        sep='\s+',
         names=colnames,
         skiprows=skip_rows
     )
@@ -476,7 +476,7 @@ elif psource == 'ucm':
 
 
 # Check to make sure this object has an entry in stars.dat file
-star_dat = pd.read_csv(star_dat_filename,header=None,delim_whitespace=True,dtype=str)
+star_dat = pd.read_csv(star_dat_filename,header=None,sep='\s+',dtype=str)
 obj_idx = star_dat.index[star_dat.iloc[:,0] == obj_name]
 if len(obj_idx) == 0:
     print("\nWARNING: No objects by name of '{}' found in '{}'\n".format(
@@ -1824,7 +1824,7 @@ cx_pp.legend(ncol=1,fontsize=8,loc='upper right')
 # Add text and labels
 cx_lc.set_xlabel('Time (s)',fontsize=9,**fontb)
 cx_lc.set_ylabel('Rel. Flux (%)',fontsize=9,**fontb)
-cx_ft.set_xlabel('Frequency ($\mu$Hz)',fontsize=9,**fontb)
+cx_ft.set_xlabel('Frequency ($\\mu$Hz)',fontsize=9,**fontb)
 cx_ft.set_ylabel('Amplitude (%)',fontsize=9,**fontb)
 cx_pp.set_xlabel('Aperture Radius (pix)',fontsize=9,**fontb)
 cx_pp.set_ylabel('Avg. P2P-Scatter (%)',fontsize=9,**fontb)
