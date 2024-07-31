@@ -86,7 +86,7 @@ if (wqed) & (columns > 2):
     print('\nLightcurve is not of type WQED. Expected 2 columns, saw {}'.format(columns))
     print('Program exited.\n')
     sys.exit(1)
-if (~wqed) & (columns < 3):
+if (not wqed) & (columns < 3):
     print('\nLightcurve is not of type PHOT2LC. Expected 3 columns, saw {}'.format(columns))
     print('Program exited.\n')
     sys.exit(1)
