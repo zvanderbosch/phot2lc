@@ -18,11 +18,11 @@
 # -- Project information -----------------------------------------------------
 
 project = 'phot2lc'
-copyright = '2021, Zach Vanderbosch'
+copyright = '2024, Zach Vanderbosch'
 author = 'Zach Vanderbosch'
 
 # The full version, including alpha/beta/rc tags
-release = '1.7.3'
+release = '1.8.0'
 
 
 # -- General configuration ---------------------------------------------------
