@@ -571,9 +571,11 @@ Version 1.7.1 - 2023-02-07
   to get the correct author metadata into the .lc file.
 
 
-
-
-
-
-
-
+Version 1.8.0 (2024 July 31)
+----------------------------
+> Updated the weldlc program to be compatible with the
+  updated headers of the .lc files.
+> Removed deprecated 'delim_whitespace' parameters from
+  pandas read_csv function calls, now using sep='\\s+'
+> Fixed all microhertz axis labels from '$\mu$' to '$\\mu$'
+  to avoid syntax warnings.

@@ -293,7 +293,7 @@ phot_names = [f for _,f in sorted(zip(ap_sizes_raw,phot_names_raw))]
 
 # Load in the Photometry for each aperture size
 if psource in ['hsp','mae']:
-    phot_data = [pd.read_csv(f,header=None,delim_whitespace=True).iloc[:,1:].astype('float64') 
+    phot_data = [pd.read_csv(f,header=None,sep='\\s+').iloc[:,1:].astype('float64') 
                  for f in phot_names]
 elif psource == 'hcm':
 
@@ -312,7 +312,7 @@ elif psource == 'hcm':
     df = pd.read_csv(
         phot_names[0],
         header=None,
-        sep='\s+',
+        sep='\\s+',
         names=colnames,
         skiprows=skip_rows
     )
@@ -476,7 +476,7 @@ elif psource == 'ucm':
 
 
 # Check to make sure this object has an entry in stars.dat file
-star_dat = pd.read_csv(star_dat_filename,header=None,sep='\s+',dtype=str)
+star_dat = pd.read_csv(star_dat_filename,header=None,sep='\\s+',dtype=str)
 obj_idx = star_dat.index[star_dat.iloc[:,0] == obj_name]
 if len(obj_idx) == 0:
     print("\nWARNING: No objects by name of '{}' found in '{}'\n".format(
