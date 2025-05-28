@@ -159,6 +159,8 @@ def get_loc(hdr,telcode):
             lon=-45.5825*u.deg,
             lat=-22.71777778*u.deg,
             height=1864.0*u.m)
+    elif telcode == 'sarm':
+        loc = EarthLocation.of_site('Roque de los Muchachos')
     return loc
 
 # LNA:  long= W 45 34 57  lat= -22 43 04, altitude = 1864m
