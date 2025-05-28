@@ -157,6 +157,21 @@ def get_telinfo():
      "tformat" :1,
      "dark"    :np.nan,
      "read"    :np.nan,
+     "gain"    :1.00},
+    
+    {"telename":"SARA RM",
+     "instname":"SARA-RM Andor Ikon-L",
+     "code"    :"sarm",
+     "objname" :"OBJECT",
+     "filter"  :"FILTER",
+     "observer":"OBSERVER",
+     "date"    :"DATE-OBS",
+     "time"    :None,
+     "texp"    :"EXPTIME",
+     "dformat" :1,
+     "tformat" :1,
+     "dark"    :np.nan,
+     "read"    :np.nan,
      "gain"    :1.00},]
 
     return tele_info
