@@ -132,7 +132,8 @@ def get_loc(hdr,telcode):
         loc = EarthLocation.from_geodetic(
             lon=31.67991667*u.deg,
             lat=97.67352778*u.deg,
-            height=333.0*u.m)
+            height=333.0*u.m
+        )
     elif telcode == 'lco1':
         site_info = hdr['SITE'].split(" ")
         if any([x=='Haleakala'] for x in site_info):
@@ -149,7 +150,8 @@ def get_loc(hdr,telcode):
             loc = EarthLocation.from_geodetic(
                 lon=20.301111*u.deg,
                 lat=-16.510556*u.deg,
-                height=2390.*u.m)
+                height=2390.*u.m
+            )
     elif telcode == 'kped':
         loc = EarthLocation.of_site('Kitt Peak')
     elif telcode == 'p200':
@@ -158,12 +160,11 @@ def get_loc(hdr,telcode):
         loc = EarthLocation.from_geodetic(
             lon=-45.5825*u.deg,
             lat=-22.71777778*u.deg,
-            height=1864.0*u.m)
+            height=1864.0*u.m
+        )
     elif telcode == 'sarm':
         loc = EarthLocation.of_site('Roque de los Muchachos')
     return loc
-
-# LNA:  long= W 45 34 57  lat= -22 43 04, altitude = 1864m
 
 ###################################################
 # Some functions used for calculating a divided light curve
