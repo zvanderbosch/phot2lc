@@ -1,4 +1,4 @@
-import numpy as np
+    import numpy as np
 
 """
 Script containing information for each
@@ -182,7 +182,69 @@ def get_telinfo():
             "read"    :np.nan,
             "gain"    :1.00
         },
+        {
+            "telename":"SARA KP",
+             "instname":"Arc Camera",
+             "code"    :"sakt",
+             "objname" :"OBJECT",
+             "filter"  :"FILTER",
+             "observer":"OBSERVER",
+             "date"    :"DATE-OBS",
+             "time"    :None,
+             "texp"    :"EXPTIME",
+             "dformat" :1,
+             "tformat" :1,
+             "dark"    :np.nan,
+             "read"    :np.nan,
+             "gain"    :1.00
+        },
+        {
+            "telename":"SARA KP",
+             "instname":"Arc Camera",
+             "code"    :"sakp",
+             "objname" :"OBJECT",
+             "filter"  :"FILTER",
+             "observer":"OBSERVER",
+             "date"    :"DATE-OBS",
+             "time"    :None,
+             "texp"    :"EXPTIME",
+             "dformat" :1,
+             "tformat" :1,
+             "dark"    :np.nan,
+             "read"    :np.nan,
+             "gain"    :1.00
+         },
+         {
+             "telename":"SARA CT",
+             "instname":"Andor Camera",
+             "code"    :"sact",
+             "objname" :"OBJECT",
+             "filter"  :"FILTER",
+             "observer":"OBSERVER",
+             "date"    :"DATE-OBS",
+             "time"    :None,
+             "texp"    :"EXPTIME",
+             "dformat" :1,
+             "tformat" :1,
+             "dark"    :np.nan,
+             "read"    :np.nan,
+             "gain"    :1.00
+         },
+         {
+             "telename":"Amagi Observatory",
+             "instname":"E-4240bi",
+             "code"    :"amag",
+             "objname" :"OBJECT",
+             "observer":"OBSERVER",
+             "date"    :"DATE-OBS",
+             "time"    :None,
+             "texp"    :"EXPTIME",
+             "dformat" :1,
+             "tformat" :1,
+             "dark"    :np.nan,
+             "read"    :np.nan,
+             "gain"    :1.00
+         },
     ]
 
     return tele_info
-
