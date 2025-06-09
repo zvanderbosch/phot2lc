@@ -1,4 +1,4 @@
-    import numpy as np
+import numpy as np
 
 """
 Script containing information for each
