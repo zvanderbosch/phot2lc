@@ -164,6 +164,38 @@ def get_loc(hdr,telcode):
         )
     elif telcode == 'sarm':
         loc = EarthLocation.of_site('Roque de los Muchachos')
+    elif telcode == 'sakt':
+        loc = EarthLocation.of_site('Kitt Peak')
+    elif telcode == 'sakp':
+        loc = EarthLocation.of_site('Kitt Peak')
+    elif telcode == 'sact':
+        loc = EarthLocation.of_site('ctio')
+    elif telcode == 'amag':
+        loc = EarthLocation.from_geodetic(
+                lon=139.0417514,
+                lat=34.8932839,
+                height=880*u.m
+            )
+    elif telcode == 'uh22':
+        loc = EarthLocation.from_geodetic(
+                lon=-155.47083333*u.deg,
+                lat=19.82361111*u.deg,
+                height=4207.2*u.m
+            )
+    elif telcode == 'oanspm':
+        loc = EarthLocation.from_geodetic(
+                lon=-115.46361111*u.deg,
+                lat=31.04416667*u.deg,
+                height=2830.0*u.m
+            )
+    elif telcode == 'stew':
+        loc = EarthLocation.from_geodetic(
+                lon=-110.73452778*u.deg,
+                lat=32.41647222*u.deg,
+                height=2510*u.m
+            )
+    elif telcode == 'caha':
+        loc = EarthLocation.of_site('CAHA')
     return loc
 
 ###################################################
