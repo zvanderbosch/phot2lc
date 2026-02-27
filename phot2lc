@@ -32,6 +32,7 @@ Options:
     -s --source    Code name for photometry program used
     -i --image     Name of specific image instead of list
     -o --object    Name of object matching stars.dat entry
+    -f --filter    Name of filter used for observations
 
 """ 
 
@@ -151,6 +152,8 @@ parser.add_argument('-i', '--image',type=str,default=default_image,
                     help="Whether to use a list of images, or just one.")
 parser.add_argument('-o', '--object',type=str,default=default_object,
                     help="Name of object. If None, get object from FITS header.")
+parser.add_argument('-f', '--filter',type=str,default=default_filter,
+                    help="Name of filter. If None, get filter from FITS header.")
 parser.add_argument('-b', '--barycorr',action='store_false',
                     help="If invoked, do NOT perform barycentric corrections.")
 args = parser.parse_args()
@@ -397,10 +400,13 @@ if psource in ['hsp','mae','hcm']:
         observer = hdr[teldict['observer']]
     else:
         observer = ""
-    if teldict['filter'] is not None:
-        filter_name = hdr[teldict['filter']]
+    if args.filter is None:
+        if teldict['filter'] is not None:
+            filter_name = hdr[teldict['filter']]
+        else:
+            filter_name = ""
     else:
-        filter_name = ""
+        filter_name = args.filter
     if args.object is None:
         obj_name = hdr[teldict['objname']].replace(" ","")
         if obj_name is None:
@@ -411,7 +417,10 @@ if psource in ['hsp','mae','hcm']:
 elif psource == 'ucm':
     _,hdr = read_ucm(fits_list[0])
     observer = hdr['Observer'][0]
-    filter_name = hdr['Filter'][0]
+    if args.filter is None:
+        filter_name = hdr['Filter'][0]
+    else:
+        filter_name = args.filter
     if args.object is None:
         obj_name = hdr['Object'][0].replace(" ","")
         if obj_name is None:

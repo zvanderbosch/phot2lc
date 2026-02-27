@@ -7,3 +7,4 @@ default_telescope = p200
 default_source    = hcm
 default_image     = None
 default_object    = None
+default_filter    = None
