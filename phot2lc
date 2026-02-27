@@ -132,6 +132,7 @@ default_telescope = config_dat[5]
 default_source = config_dat[6]
 default_image = None if config_dat[7] == 'None' else config_dat[7]
 default_object = None if config_dat[8] == 'None' else config_dat[8]
+default_filter = None if config_dat[9] == 'None' else config_dat[9]
 
 
 #############################################################
