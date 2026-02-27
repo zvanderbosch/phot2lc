@@ -107,7 +107,6 @@ from phot2lc.ucm_utils import read_ucm
 ## Load in the config.dat file and use it to set the 
 ## defaults for user-based parameters.
 
-import phot2lc.teledat
 config_path = os.path.dirname(os.path.realpath(phot2lc.teledat.__file__))
 config_dat = []
 with open(config_path + "/config.dat") as f:
