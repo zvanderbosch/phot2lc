@@ -2047,7 +2047,7 @@ def calc_err_hcm(phot,photerr):
     """
 
     object_phot = phot[:,0]
-    comp_phot = np.sum(phot[:,1:-1],axis=1)
+    comp_phot = np.sum(phot[:,1:],axis=1)
     mean_ratio = np.nanmean(object_phot / comp_phot)
 
     norm_noise = photerr / comp_phot / mean_ratio
