@@ -393,8 +393,14 @@ instrument = teldict['instname']
 
 if psource in ['hsp','mae','hcm']:
     hdr = fits.getheader(fits_list[0])
-    observer = hdr[teldict['observer']]
-    filter_name = hdr[teldict['filter']]
+    if teldict['observer'] is not None:
+        observer = hdr[teldict['observer']]
+    else:
+        observer = ""
+    if teldict['filter'] is not None:
+        filter_name = hdr[teldict['filter']]
+    else:
+        filter_name = ""
     if args.object is None:
         obj_name = hdr[teldict['objname']].replace(" ","")
         if obj_name is None:
@@ -2125,7 +2131,7 @@ rawphot_header = 'Object     = {:30s}# Name of Object'.format(obj_name) + \
     '\nApRadius   = {:<30.2f}# Aperture Radius (pixels)'.format(opt_ap) + \
     '\nNkeep      = {:<30d}# Number of points in light curve '.format(len(keep_ind)) + \
     '\nNdelete    = {:<30d}# Number of points removed'.format(len(dele_ind)) + \
-    '\nColumns: Time since T0 (s), Target, Comparisons, Sky' 
+    '\nColumns: Time since T0 (s), Target, Comparisons, Sky'
 
 # Header for the final lightcurve
 lcfin_header = 'Object     = {:30s}# Name of Object'.format(obj_name) + \
@@ -2153,7 +2159,7 @@ lcfin_header = 'Object     = {:30s}# Name of Object'.format(obj_name) + \
     '\nNdelete    = {:<30d}# Number of points removed'.format(len(dele_ind)) + \
     '\nAuthor     = {:30s}# Author of this light curve'.format(author) + \
     '\nCreatedOn  = {:30s}# Date created'.format(Time.now().to_value("iso")) + \
-    '\nColumns: Time since T0 (s), Relative Flux, Relative Flux Error' 
+    '\nColumns: Time since T0 (s), Relative Flux, Relative Flux Error'
 
 # Header for the raw photometry file
 log_header = '    OBJECT = {}'.format(obj_name) + \
