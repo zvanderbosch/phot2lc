@@ -47,20 +47,34 @@ version_history.txt file.
 
 # Generate arguments for command line parsing
 parser = argparse.ArgumentParser(description='Provide Input & Output Filenames.')
-parser.add_argument('-f', '--files',type=str,nargs='*',
-                    help="Input file(s) to perform quicklook on.")
-parser.add_argument('-s', '--save',action='store_true',
-                    help="Whether to save the quicklook plot.")
-parser.add_argument('-p', '--prewhiten',action='store_true',
-                    help="Whether to perform a pre-whitening sequence.")
-parser.add_argument('-l', '--lower',type=float,default=500.,
-                    help="Lower frequency limit for pre-whitening search (micro-Hertz).")
-parser.add_argument('-u', '--upper',type=float,default=100000.,
-                    help="Upper frequency limit for pre-whitening search (micro-Hertz).")
-parser.add_argument('-n', '--num',type=int,default=10,
-                    help="Maximum number of pre-whitening iterations.")
-parser.add_argument('-w', '--wqedlc',action='store_true',
-                    help="Whether the input file(s) are from WQED.")
+parser.add_argument(
+    '-f', '--files',type=str,nargs='*',
+    help="Input file(s) to perform quicklook on."
+)
+parser.add_argument(
+    '-s', '--save',action='store_true',
+    help="Whether to save the quicklook plot."
+)
+parser.add_argument(
+    '-p', '--prewhiten',action='store_true',
+    help="Whether to perform a pre-whitening sequence."
+)
+parser.add_argument(
+    '-l', '--lower',type=float,default=500.,
+    help="Lower frequency limit for pre-whitening search (micro-Hertz)."
+)
+parser.add_argument(
+    '-u', '--upper',type=float,default=100000.,
+    help="Upper frequency limit for pre-whitening search (micro-Hertz)."
+)
+parser.add_argument(
+    '-n', '--num',type=int,default=10,
+    help="Maximum number of pre-whitening iterations."
+)
+parser.add_argument(
+    '-w', '--wqedlc',action='store_true',
+    help="Whether the input file(s) are from WQED."
+)
 args = parser.parse_args()
 
 # First check whether the file(s) come from phot2lc or wqed
@@ -128,7 +142,13 @@ for file in filenames:
 
     # Extract frequency and amplitude values from LMFIT result
     if args.prewhiten:
-        result, lsp_pw = prewhiten(time,flux,Npw=args.num,fmin=args.lower,fmax=args.upper)
+        result, lsp_pw = prewhiten(
+            time,
+            flux,
+            Npw=args.num,
+            fmin=args.lower,
+            fmax=args.upper
+        )
         if result is not None:
             # Save Fit Results
             freq_vals = []
@@ -156,9 +176,11 @@ for file in filenames:
     ax0 = fig.add_subplot(gs[0])
     ax1 = fig.add_subplot(gs[1])
 
-    ax0.errorbar(time/3600,flux*1e2,yerr=fluxerr*1e2,
+    ax0.errorbar(
+        time/3600,flux*1e2,yerr=fluxerr*1e2,
         ls='None',marker='.',ms=5,mfc='k',mec='k',
-        ecolor='silver',elinewidth=1)
+        ecolor='silver',elinewidth=1
+    )
     ax1.plot(farr*1e6,lsp*1e2,c='k',lw=1)
     ax1.axhline(sig*1e2,ls=':',c='C2')
 
@@ -182,16 +204,24 @@ for file in filenames:
     axis_to_data = ax1.transAxes + ax1.transData.inverted()
     data_to_axis = axis_to_data.inverted()
     points_axis = data_to_axis.transform([0,sig*1e2+0.04*yupp])
-    ax1.text(0.80,points_axis[1],threshold_text, 
-             color='C2',fontsize=10,transform=ax1.transAxes)
+    ax1.text(
+        0.80,points_axis[1],threshold_text, 
+        color='C2',fontsize=10,transform=ax1.transAxes
+    )
 
     # Add Markers for Each Frequency
     if args.prewhiten:
         if Np > 0:
             ax1.fill_between(farr*1e6,lsp_pw*1e2,y2=0,color='C3',alpha=0.4,lw=0)
             for i,f in enumerate(freq_vals):
-                ax1.plot(f*1e6,1.09*amax,ls='None',marker='|',mfc='b',mec='b',mew=0.5)
-                ax1.text(f*1e6,1.13*amax,'{}'.format(i+1),ha='center',fontsize=7,color='b')
+                ax1.plot(
+                    f*1e6,1.09*amax,
+                    ls='None',marker='|',mfc='b',mec='b',mew=0.5
+                )
+                ax1.text(
+                    f*1e6,1.13*amax,'{}'.format(i+1),
+                    ha='center',fontsize=7,color='b'
+                )
 
         # Print out Each Peaks Frequency and Amplitude
         available_fonts = []
@@ -211,22 +241,30 @@ for file in filenames:
                 yloc = 0.83 - (float(i)*0.055)
                 if (p >= 600.) & (p < 3600.):
                     p = p/60. # Convert to minutes if >= 10 minutes
-                    ax1.text(0.55,yloc,'{}: {:7.1f} $\\mu$Hz, {:5.2f} min, {:5.2f} %'.format(i+1,f*1e6,p,a*1e2),
-                             fontsize=8,transform=ax1.transAxes,**font)
+                    ax1.text(
+                        0.55,yloc,'{}: {:7.1f} $\\mu$Hz, {:5.2f} min, {:5.2f} %'.format(i+1,f*1e6,p,a*1e2),
+                        fontsize=8,transform=ax1.transAxes,**font
+                    )
 
                 elif (p >= 3600.) & (p < 86400.):
                     p = p/3600. # Convert to hours if >= 1 hour
-                    ax1.text(0.55,yloc,'{}: {:7.1f} $\\mu$Hz, {:5.2f} hr, {:5.2f} %'.format(i+1,f*1e6,p,a*1e2),
-                             fontsize=8,transform=ax1.transAxes,**font)
+                    ax1.text(
+                        0.55,yloc,'{}: {:7.1f} $\\mu$Hz, {:5.2f} hr, {:5.2f} %'.format(i+1,f*1e6,p,a*1e2),
+                        fontsize=8,transform=ax1.transAxes,**font
+                    )
 
                 elif (p >= 86400.):
                     p = p/86400. # Convert to days if >= 1 day
-                    ax1.text(0.55,yloc,'{}: {:7.1f} $\\mu$Hz, {:5.2f} d, {:5.2f} %'.format(i+1,f*1e6,p,a*1e2),
-                             fontsize=8,transform=ax1.transAxes,**font)
+                    ax1.text(
+                        0.55,yloc,'{}: {:7.1f} $\\mu$Hz, {:5.2f} d, {:5.2f} %'.format(i+1,f*1e6,p,a*1e2),
+                        fontsize=8,transform=ax1.transAxes,**font
+                    )
 
                 else:
-                    ax1.text(0.55,yloc,'{}: {:7.1f} $\\mu$Hz, {:5.1f} s, {:5.2f} %'.format(i+1,f*1e6,1./f,a*1e2),
-                             fontsize=8,transform=ax1.transAxes,**font)
+                    ax1.text(
+                        0.55,yloc,'{}: {:7.1f} $\\mu$Hz, {:5.1f} s, {:5.2f} %'.format(i+1,f*1e6,1./f,a*1e2),
+                        fontsize=8,transform=ax1.transAxes,**font
+                    )
 
 
     # Add a title
