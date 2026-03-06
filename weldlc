@@ -30,12 +30,18 @@ header_format = {
 
 # Generate arguments for command line parsing
 parser = argparse.ArgumentParser(description='Provide Input & Output Filenames.')
-parser.add_argument('-f', '--infiles',type=str,nargs='*',
-                    help="Input files.")
-parser.add_argument('-b', '--bypass',action='store_true',
-                    help="Bypass the barycentric correction check and weld LC's anyways.")
-parser.add_argument('-o', '--outfile',type=str,
-                    help="Output filename.")
+parser.add_argument(
+    '-f', '--infiles',type=str,nargs='*',
+    help="Input files."
+)
+parser.add_argument(
+    '-b', '--bypass',action='store_true',
+    help="Bypass the barycentric correction check and weld LC's anyways."
+)
+parser.add_argument(
+    '-o', '--outfile',type=str,
+    help="Output filename."
+)
 args = parser.parse_args()
 
 
