@@ -113,17 +113,17 @@ with open(config_path + "/config.dat") as f:
     for l in f.readlines():
         config_dat.append(l.strip("\n").split("=")[-1].strip())
 
-
 # File containing the list of images being analyzed
 list_name = config_dat[1]
+
 # Optional File containing initial guesses at source locations.
 tloc_name = config_dat[2]
+
 # Base filename for photometry output from pipelines
 phot_basename = config_dat[3]
+
 # Path to file containing object names + coordinates
 star_dat_filename = config_dat[4] 
-
-
 
 # Defualt arguments for argparse
 default_author = config_dat[0]
@@ -135,27 +135,79 @@ default_filter = None if config_dat[9] == 'None' else config_dat[9]
 
 
 #############################################################
+## Define some additional global params
+
+# Currently supported photometry pipeline sources
+source_dict = {
+    'hsp':'ccd_hsp',
+    'mae':'maestro',
+    'hcm':'hipercam',  # Currently supports HiPERCAM pipeline output v1.2.0
+    'ucm':'ultracam'   # Currently supports ULTRACAM pipeline output v19/12/2005
+}
+
+# Define a Z-scale normalization object
+ZS = ZScaleInterval(
+    nsamples=10000, 
+    contrast=0.15, 
+    max_reject=0.5, 
+    min_npixels=5, 
+    krej=2.5, 
+    max_iterations=5
+)
+
+# Font selection for plotting windows
+if sys.platform == 'darwin':
+    fonta = {'fontname': 'AppleGothic',
+              'weight': 'heavy'}
+    fontb = {'fontname': 'AppleGothic',
+             'weight': 'normal'}
+else:
+    fonta = {'fontname': 'DejaVu Sans Mono',
+              'weight': 'heavy'}
+    fontb = {'fontname': 'DejaVu Sans Mono',
+             'weight': 'normal'}
+
+
+#############################################################
 ## Generate arguments for command line parsing
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-c', '--codes',action='store_true',
-                    help="If invoked, print list of available telescope codes.")
-parser.add_argument('-a', '--author',type=str,default=default_author,
-                    help="Name of phot2lc user.")
-parser.add_argument('-t', '--telescope',type=str,default=default_telescope,
-                    help="Code name for telescope used.")
-parser.add_argument('-s', '--source',type=str,default=default_source,
-                    help="Source of photometry (ccd_hsp or maestro)")
-parser.add_argument('-p', '--photname',type=str,default=phot_basename,
-                    help="Base filename for photometry output files.")
-parser.add_argument('-i', '--image',type=str,default=default_image,
-                    help="Whether to use a list of images, or just one.")
-parser.add_argument('-o', '--object',type=str,default=default_object,
-                    help="Name of object. If None, get object from FITS header.")
-parser.add_argument('-f', '--filter',type=str,default=default_filter,
-                    help="Name of filter. If None, get filter from FITS header.")
-parser.add_argument('-b', '--barycorr',action='store_false',
-                    help="If invoked, do NOT perform barycentric corrections.")
+parser.add_argument(
+    '-c', '--codes',action='store_true',
+    help="If invoked, print list of available telescope codes."
+)
+parser.add_argument(
+    '-a', '--author',type=str,default=default_author,
+    help="Name of phot2lc user."
+)
+parser.add_argument(
+    '-t', '--telescope',type=str,default=default_telescope,
+    help="Code name for telescope used."
+)
+parser.add_argument(
+    '-s', '--source',type=str,default=default_source,
+    help="Source of photometry (ccd_hsp or maestro)"
+)
+parser.add_argument(
+    '-p', '--photname',type=str,default=phot_basename,
+    help="Base filename for photometry output files."
+)
+parser.add_argument(
+    '-i', '--image',type=str,default=default_image,
+    help="Whether to use a list of images, or just one."
+)
+parser.add_argument(
+    '-o', '--object',type=str,default=default_object,
+    help="Name of object. If None, get object from FITS header."
+)
+parser.add_argument(
+    '-f', '--filter',type=str,default=default_filter,
+    help="Name of filter. If None, get filter from FITS header."
+)
+parser.add_argument(
+    '-b', '--barycorr',action='store_false',
+    help="If invoked, do NOT perform barycentric corrections."
+)
 args = parser.parse_args()
 
 
@@ -171,10 +223,11 @@ if author == 'sys-user':
 # Load list containing telescope information
 telinfo = get_telinfo()
 
-# Currently supported codes, telescopes, instruments
+# Define currently supported codes, telescopes, instruments, and photometry pipeline sources
 valid_codes = [x['code'] for x in telinfo]
 valid_telescopes = [x['telename'] for x in telinfo]
 valid_instruments = [x['instname'] for x in telinfo]
+valid_sources = list(source_dict.keys())
 
 # Print out available codes if requested
 if args.codes:
@@ -196,16 +249,6 @@ else:
         print("   {} = {} {}".format(code,tele,inst))
     print("")
     sys.exit(1)
-
-
-# Currently supported photometry sources
-valid_sources = ['hsp','mae','hcm','ucm']
-source_dict = {
-    'hsp':'ccd_hsp',
-    'mae':'maestro',
-    'hcm':'hipercam',  # Currently supports HiPERCAM pipeline output v1.2.0
-    'ucm':'ultracam'   # Currently supports ULTRACAM pipeline output v19/12/2005
-}
 
 # Check that photometry source is valid
 psource = args.source
@@ -365,24 +408,27 @@ elif psource == 'ucm':
     phot_data = [df]
 
 
-
-          
+# Get number of stars and data points within photometry input files    
 if psource == 'hsp':
-    Nobj = len(phot_data[0].columns) - 1  # Number of stars (last column is sky)
+    Nobj = len(phot_data[0].columns) - 1  # last column is sky
 elif psource == 'mae':
     Nobj = int(len(phot_data[0].columns)/2)
 elif psource == 'hcm':
     Nobj = int((len(phot_data[0].columns)-7)/16)
 elif psource == 'ucm':
     Nobj = int((len(phot_data[0].columns)-7)/14)
-Ndat = len(phot_data[0])  # Number of data points
+Ndat = len(phot_data[0])
 
 
 # If Phot2lc has been run previously, load in the Log File
 log_exists = False
 if os.path.exists('phot2lc_log.txt'):
-    log_header = pd.read_csv('phot2lc_log.txt',header=None,
-                              nrows=5,delimiter='?').values
+    log_header = pd.read_csv(
+        'phot2lc_log.txt',
+        header=None,
+        nrows=5,
+        delimiter='?'
+    ).values
     log_data = np.loadtxt('phot2lc_log.txt')
     log_exists = True
 
@@ -521,8 +567,6 @@ else:
 imrows,imcols = np.shape(image0)
 
 # Get Z-Scale Normalization vmin and vmax
-ZS = ZScaleInterval(nsamples=10000, contrast=0.15, max_reject=0.5, 
-                    min_npixels=5, krej=2.5, max_iterations=5)
 vmin0,vmax0 = ZS.get_limits(image0)
 
 # Plot images with sources marked
@@ -533,18 +577,6 @@ im = imfig.add_subplot(gsim[0])
 
 # Set Window Name
 imfig.canvas.manager.set_window_title('First Image')
-
-# Font Choices (better fonts for macOSX)
-if sys.platform == 'darwin':
-    fonta = {'fontname': 'AppleGothic',
-              'weight': 'heavy'}
-    fontb = {'fontname': 'AppleGothic',
-             'weight': 'normal'}
-else:
-    fonta = {'fontname': 'DejaVu Sans Mono',
-              'weight': 'heavy'}
-    fontb = {'fontname': 'DejaVu Sans Mono',
-             'weight': 'normal'}
 
 # Show the first image
 im.imshow(image0, cmap='gray',vmin=vmin0, vmax=vmax0)
@@ -721,7 +753,6 @@ elif psource in ['hcm','ucm']:
     comp_ids = [f'counts_{x}' for x in range(2,Nobj+1)]
     count_ids = ['counts_1'] + comp_ids
 
-
 if not log_exists:
     comp_select = comp_ids.copy()
 elif log_exists:
@@ -764,10 +795,14 @@ for i in range(Nobj+1):
         elif psource in ['hcm','ucm']:
             lc_labelb = '{:.0f}'.format(phot_data[0]['counts_1'].mean())
         lc_color = dbk_clist[i]
-        ax_LC.text(xloc,float(Nobj+1-i)-0.00,lc_labela,
-                   fontsize=13,color=lc_color,**fonta)
-        ax_LC.text(xloc,float(Nobj+1-i)-0.30,lc_labelb,
-                   fontsize=10,color=lc_color,**fonta)
+        ax_LC.text(
+            xloc,float(Nobj+1-i)-0.00,lc_labela,
+            fontsize=13,color=lc_color,**fonta
+        )
+        ax_LC.text(
+            xloc,float(Nobj+1-i)-0.30,lc_labelb,
+            fontsize=10,color=lc_color,**fonta
+        )
     elif (i > 0) & (i < Nobj):
         lc_labela = 'Comp {}'.format(i)
         if psource == 'hsp':
@@ -777,18 +812,26 @@ for i in range(Nobj+1):
         elif psource in ['hcm','ucm']:
             lc_labelb = '{:.0f}'.format(phot_data[0][f'counts_{i+1}'].mean())
         lc_color = dbk_clist[i]
-        ax_LC.text(xloc,float(Nobj+1-i)-0.00,lc_labela,
-                   fontsize=13,color=lc_color,**fonta)
-        ax_LC.text(xloc,float(Nobj+1-i)-0.30,lc_labelb,
-                   fontsize=10,color=lc_color,**fonta)
+        ax_LC.text(
+            xloc,float(Nobj+1-i)-0.00,lc_labela,
+            fontsize=13,color=lc_color,**fonta
+        )
+        ax_LC.text(
+            xloc,float(Nobj+1-i)-0.30,lc_labelb,
+            fontsize=10,color=lc_color,**fonta
+        )
     else:
         lc_labela = 'Sky'
         lc_labelb = '{:.0f}'.format(sky_flux.mean())
         lc_color = '#3C87FA'
-        ax_LC.text(xloc,float(Nobj+1-i)-0.50,lc_labela,
-                   fontsize=13,color=lc_color,**fonta)
-        ax_LC.text(xloc,float(Nobj+1-i)-0.80,lc_labelb,
-                   fontsize=10,color=lc_color,**fonta)
+        ax_LC.text(
+            xloc,float(Nobj+1-i)-0.50,lc_labela,
+            fontsize=13,color=lc_color,**fonta
+        )
+        ax_LC.text(
+            xloc,float(Nobj+1-i)-0.80,lc_labelb,
+            fontsize=10,color=lc_color,**fonta
+        )
 
 
 # Add XY labels
@@ -820,8 +863,13 @@ bx_text = figb.add_subplot(gsb[0,1:])
 
 # Make axes invisible for text axis
 #bx_text.axis('off')
-bx_text.tick_params(which='both',labelbottom=False, labelleft=False, 
-                    left=False, bottom=False)
+bx_text.tick_params(
+    which='both',
+    labelbottom=False, 
+    labelleft=False, 
+    left=False, 
+    bottom=False
+)
 bx_text.set_facecolor('xkcd:charcoal')
 bx_text.spines['bottom'].set_color('w')
 bx_text.spines['top'].set_color('w') 
@@ -832,11 +880,30 @@ bx_text.spines['left'].set_color('w')
 figb.canvas.manager.set_window_title('Divided Light Curve')
 
 # Tick Parameters
-bx_LC.tick_params(which='both',axis='both',right=True,top=True,direction='in')
-bx_mod.tick_params(which='both',axis='both',labelbottom=False,
-                   labelleft=False,left=False,bottom=False)
-bx_comp.tick_params(which='both',axis='both',labelbottom=False,direction='in',
-                   labelleft=False,left=False,bottom=True)
+bx_LC.tick_params(
+    which='both',
+    axis='both',
+    right=True,
+    top=True,
+    direction='in'
+)
+bx_mod.tick_params(
+    which='both',
+    axis='both',
+    labelbottom=False,
+    labelleft=False,
+    left=False,
+    bottom=False
+)
+bx_comp.tick_params(
+    which='both',
+    axis='both',
+    labelbottom=False,
+    labelleft=False,
+    left=False,
+    bottom=True,
+    direction='in'
+)
 
 # Initialize the plot
 apnum = 0   # First Aperture
@@ -856,18 +923,31 @@ if not log_exists:
 # the polynomial fit and the lists of deleted/kept points
 elif log_exists:
     if len(log_header[1][0].split("=")[-1].strip()) < 5:
-        polypack = (int(log_header[1][0].split("=")[-1].strip()),0,3.0,3.0)
+        polypack = (
+            int(log_header[1][0].split("=")[-1].strip()),
+            0,
+            3.0,
+            3.0
+        )
     else:
-        polypack = (int(log_header[1][0].split("=")[-1].strip().split(",")[0]),
-                    int(log_header[1][0].split("=")[-1].strip().split(",")[1]),
-                    float(log_header[1][0].split("=")[-1].strip().split(",")[2]),
-                    float(log_header[1][0].split("=")[-1].strip().split(",")[3]))
+        polypack = (
+            int(log_header[1][0].split("=")[-1].strip().split(",")[0]),
+            int(log_header[1][0].split("=")[-1].strip().split(",")[1]),
+            float(log_header[1][0].split("=")[-1].strip().split(",")[2]),
+            float(log_header[1][0].split("=")[-1].strip().split(",")[3])
+        )
     dele_ind = [i for i,x in enumerate(log_data[:,1]) if x == 0]
     keep_ind = [i for i,x in enumerate(log_data[:,1]) if x == 1]
 
 # Create one version of the divided light curve without any deleted points
-dlc_init_all,_,_,_ = div_lc(time_stamps,phot_target,phot_comps,
-                            polypack,list(range(Ndat)),[])
+dlc_init_all,_,_,_ = div_lc(
+    time_stamps,
+    phot_target,
+    phot_comps,
+    polypack,
+    list(range(Ndat)),
+    []
+)
 
 # Create version with points deleted if specified
 dlc_init, dellc_init, draw_init, mod_init = div_lc(
@@ -881,27 +961,43 @@ dlc_init, dellc_init, draw_init, mod_init = div_lc(
 
 
 # Plot Light Curve
-p0, = bx_LC.plot(time_stamps[keep_ind],dlc_init,ls='-',c='w',lw=0.5,
-                 marker='o',ms=3,mew=0.75,mec='w',mfc='w')
+p0, = bx_LC.plot(
+    time_stamps[keep_ind],dlc_init,ls='-',c='w',lw=0.5,
+    marker='o',ms=3,mew=0.75,mec='w',mfc='w'
+)
 # Show deleted points
-p1, = bx_LC.plot(time_stamps[dele_ind],dellc_init,ls='None',
-                 marker='o',ms=3,mew=0.75,mec='r',mfc='r')
+p1, = bx_LC.plot(
+    time_stamps[dele_ind],dellc_init,ls='None',
+    marker='o',ms=3,mew=0.75,mec='r',mfc='r'
+)
 # Show Polynomial Fit
-p2, = bx_mod.plot(time_stamps[keep_ind],mod_init,
-                  ls='-',c='r',lw=1.5,zorder=2)
-p3, = bx_mod.plot(time_stamps[keep_ind],draw_init,
-                  ls='None',marker='.',ms=2,mew=0,mfc='w',zorder=1)
+p2, = bx_mod.plot(
+    time_stamps[keep_ind],mod_init,
+    ls='-',c='r',lw=1.5,zorder=2
+)
+p3, = bx_mod.plot(
+    time_stamps[keep_ind],draw_init,
+    ls='None',marker='.',ms=2,mew=0,mfc='w',zorder=1
+)
 # Show Summed Comp Star Light Curve
-p4, = bx_comp.plot(time_stamps[keep_ind],phot_comps[keep_ind],
-                   ls='None',marker='.',ms=4,mew=0,mfc='C0')
+p4, = bx_comp.plot(
+    time_stamps[keep_ind],phot_comps[keep_ind],
+    ls='None',marker='.',ms=4,mew=0,mfc='C0'
+)
 # Show Summed Comp Star Light Curve Deleted Points
-p5, = bx_comp.plot(time_stamps[dele_ind],phot_comps[dele_ind],
-                   ls='None',marker='.',ms=4,mew=0,mfc='r')
+p5, = bx_comp.plot(
+    time_stamps[dele_ind],phot_comps[dele_ind],
+    ls='None',marker='.',ms=4,mew=0,mfc='r'
+)
 
 # Add a cursor to the divided light curve and comparison star plots
-multicursor = MultiCursor(figb.canvas, (bx_LC, bx_comp), 
-                          useblit=True, horizOn=True, 
-                          c='r', lw=0.5, ls='--')
+multicursor = MultiCursor(
+    figb.canvas, 
+    (bx_LC, bx_comp), 
+    useblit=True, 
+    horizOn=True, 
+    c='r', lw=0.5, ls='--'
+)
 
 # Set initial XY limits
 xlow_LC = min(time_stamps)
@@ -929,19 +1025,20 @@ bx_comp.set_ylim(ylow_comp-0.30*ydiff_comp, yupp_comp+0.30*ydiff_comp)
 bx_LC.set_xlabel('Time (s)',fontsize=12,**fontb)
 bx_LC.set_ylabel('Normalized Flux',fontsize=12,**fontb)
 
-# Add the initial title
+# Calculate average P2P scatter
 p2p_scat = pp_scat(dlc_init)
-# titleb = 'Object: {}   UT-Date: {}   UT-Time: {} \n\n'.format(
-#           obj_name,print_date,print_time)
-#bx_LC.set_title(titleb,loc='center',y=1.23,fontsize=13,**fontb)
 
 # Add text to text axis
 top_text = f"Object: {obj_name}"
 bottom_text = f"UT-Date: {print_date}   UT-Time: {print_time}"
-bx_text.text(0.5,0.70,top_text,ha='center',va='center',
-             fontsize=14.5,transform=bx_text.transAxes,**fontb)
-bx_text.text(0.5,0.30,bottom_text,ha='center',va='center',
-             fontsize=14.5,transform=bx_text.transAxes,**fontb)
+bx_text.text(
+    0.5,0.70,top_text,ha='center',va='center',
+    fontsize=14.5,transform=bx_text.transAxes,**fontb
+)
+bx_text.text(
+    0.5,0.30,bottom_text,ha='center',va='center',
+    fontsize=14.5,transform=bx_text.transAxes,**fontb
+)
 
 # Add title to polynomial plot showing the poly order
 title_poly = 'Poly Order = {}'.format(polypack[0])
@@ -955,8 +1052,10 @@ bx_comp.set_title(title_comp,loc='left',fontsize=11,x=0.01,y=0.75,**fontb)
 # Add text showing the aperture selection and P2P scatter
 apscat_str =  'Aperture Radius: {:.2f} pix {:5}'.format(ap_sizes[apnum],'') + \
               'P2P Scatter: {:.2f} %'.format(p2p_scat*1e2)
-tx0 = bx_LC.text(0.015,0.92,apscat_str,
-                 transform=bx_LC.transAxes,fontsize=11,**fontb)
+tx0 = bx_LC.text(
+    0.015,0.92,apscat_str,
+    transform=bx_LC.transAxes,fontsize=11,**fontb
+)
 
 # Set some more initial parameters
 num_del = len(dele_ind)                 # Tracks number of deleted points
@@ -1107,11 +1206,26 @@ def dlc_update(kx,ky,dx,dy,polyinfo,aper):
     elif psource in ['hcm','ucm']:
         phot_target = phot_data[0]['counts_1'].replace(0.0,1.0).values
         phot_comps = np.sum(phot_data[0][comp_select].replace(0.0,1.0).values,axis=1)
-    klc,dlc,kraw,kmod = div_lc(time_stamps,phot_target,phot_comps,
-                               polyinfo,keep_ind,dele_ind)
+    klc,dlc,kraw,kmod = div_lc(
+        time_stamps,
+        phot_target,
+        phot_comps,
+        polyinfo,
+        keep_ind,
+        dele_ind
+    )
 
     # Update the figure
-    update_plot(kx,klc,dx,dlc,kraw,kmod,phot_comps[keep_ind],phot_comps[dele_ind])
+    update_plot(
+        kx,
+        klc,
+        dx,
+        dlc,
+        kraw,
+        kmod,
+        phot_comps[keep_ind],
+        phot_comps[dele_ind]
+    )
 
     return klc, dlc, keep_ind, dele_ind
 
@@ -1151,9 +1265,9 @@ def garbage_select(eclick, erelease):
         keep_y = keep_y[keep_x.argsort()]
 
         # Update divided light curve and plot
-        keep_y,dele_y,keep_ind,dele_ind = dlc_update(keep_x,keep_y,
-                                                     dele_x,dele_y,
-                                                     polypack,apnum)
+        keep_y,dele_y,keep_ind,dele_ind = dlc_update(
+            keep_x,keep_y,dele_x,dele_y,polypack,apnum
+        )
 
         # Deactivate the garbage selector
         toggle_garbage()
@@ -1196,9 +1310,9 @@ def reverse_garbage_select(eclick, erelease):
         keep_y = keep_y[keep_x.argsort()]
 
         # Update divided light curve and plot
-        keep_y,dele_y,keep_ind,dele_ind = dlc_update(keep_x,keep_y,
-                                                     dele_x,dele_y,
-                                                     polypack,apnum)
+        keep_y,dele_y,keep_ind,dele_ind = dlc_update(
+            keep_x,keep_y,dele_x,dele_y,polypack,apnum
+        )
 
         # Deactivate the garbage selector
         toggle_reverse_garbage()
@@ -1264,9 +1378,9 @@ def sigclip_data(kx,ky,dx,dy,siglow,sigupp,dw):
     dele_y = dele_y[dele_x.argsort()]
 
     # Update divided light curve and plot
-    keep_y,dele_y,keep_ind,dele_ind = dlc_update(keep_x,keep_y,
-                                                 dele_x,dele_y,
-                                                 polypack,apnum)
+    keep_y,dele_y,keep_ind,dele_ind = dlc_update(
+        keep_x,keep_y,dele_x,dele_y,polypack,apnum
+    )
 
     return
 
@@ -1297,9 +1411,9 @@ def on_event_b(event):
             keep_x = keep_x[keep_x.argsort()]
 
             # Update divided light curve and plot
-            keep_y,dele_y,keep_ind,dele_ind = dlc_update(keep_x,keep_y,
-                                                         dele_x,dele_y,
-                                                         polypack,apnum)
+            keep_y,dele_y,keep_ind,dele_ind = dlc_update(
+                keep_x,keep_y,dele_x,dele_y,polypack,apnum
+            )
 
     # Add ALL deleted points back to the plot
     if event.key == 'A':
@@ -1316,9 +1430,9 @@ def on_event_b(event):
             keep_x = keep_x[keep_x.argsort()]
 
             # Update divided light curve and plot
-            keep_y,dele_y,keep_ind,dele_ind = dlc_update(keep_x,keep_y,
-                                                         dele_x,dele_y,
-                                                         polypack,apnum)
+            keep_y,dele_y,keep_ind,dele_ind = dlc_update(
+                keep_x,keep_y,dele_x,dele_y,polypack,apnum
+            )
 
     # Delete a single point from the light curve
     if event.key == 'd':
@@ -1334,9 +1448,9 @@ def on_event_b(event):
             num_del += 1
 
             # Update divided light curve and plot
-            keep_y,dele_y,keep_ind,dele_ind = dlc_update(keep_x,keep_y,
-                                                         dele_x,dele_y,
-                                                         polypack,apnum)
+            keep_y,dele_y,keep_ind,dele_ind = dlc_update(
+                keep_x,keep_y,dele_x,dele_y,polypack,apnum
+            )
 
     # Toggle the display of deleted points
     if event.key == 's':
@@ -1345,9 +1459,9 @@ def on_event_b(event):
         elif show_delps == True:
             show_delps=False
         # Update divided light curve and plot
-        keep_y,dele_y,keep_ind,dele_ind = dlc_update(keep_x,keep_y,
-                                                     dele_x,dele_y,
-                                                     polypack,apnum)
+        keep_y,dele_y,keep_ind,dele_ind = dlc_update(
+            keep_x,keep_y,dele_x,dele_y,polypack,apnum
+        )
 
     # Fit a Polynomial to the light curve WITHOUT
     # performing any sigma-rejection iterations (excludes deleted points)
@@ -1373,8 +1487,9 @@ def on_event_b(event):
         polypack = (deg,0,3.,3.)
 
         # Update divided light curve & plot
-        keep_y,dele_y,keep_ind,dele_ind = dlc_update(keep_x,keep_y,
-                                                     dele_x,dele_y,polypack,apnum)
+        keep_y,dele_y,keep_ind,dele_ind = dlc_update(
+            keep_x,keep_y,dele_x,dele_y,polypack,apnum
+        )
 
     # Fit a Polynomial to the light curve WITH
     # performing any sigma-rejection iterations (excludes deleted points)
@@ -1406,8 +1521,9 @@ def on_event_b(event):
         polypack = (deg,nrej,lower_sig,upper_sig)
 
         # Update divided light curve & plot
-        keep_y,dele_y,keep_ind,dele_ind = dlc_update(keep_x,keep_y,
-                                                     dele_x,dele_y,polypack,apnum)
+        keep_y,dele_y,keep_ind,dele_ind = dlc_update(
+            keep_x,keep_y,dele_x,dele_y,polypack,apnum
+        )
 
     # Choose which comparison stars to use
     if event.key == 'c':
@@ -1436,9 +1552,9 @@ def on_event_b(event):
             comp_select = [comp_ids[i] for i in new_comp_ind]
 
             # Update divided light curve & plot
-            keep_y,dele_y,keep_ind,dele_ind = dlc_update(keep_x,keep_y,
-                                                         dele_x,dele_y,
-                                                         polypack,apnum)
+            keep_y,dele_y,keep_ind,dele_ind = dlc_update(
+                keep_x,keep_y,dele_x,dele_y,polypack,apnum
+            )
 
     # Move to previous aperture size
     if event.key == 'v':
@@ -1447,9 +1563,9 @@ def on_event_b(event):
             apnum -= 1
 
         # Update divided light curve & plot
-        keep_y,dele_y,keep_ind,dele_ind = dlc_update(keep_x,keep_y,
-                                                     dele_x,dele_y,
-                                                     polypack,apnum)
+        keep_y,dele_y,keep_ind,dele_ind = dlc_update(
+            keep_x,keep_y,dele_x,dele_y,polypack,apnum
+        )
 
     # Move to next aperture size
     if event.key == 'w':
@@ -1457,9 +1573,9 @@ def on_event_b(event):
         if apnum < Nf-1: # If less than the maximum aperture size
             apnum += 1
         # Update divided light curve & plot
-        keep_y,dele_y,keep_ind,dele_ind = dlc_update(keep_x,keep_y,
-                                                     dele_x,dele_y,
-                                                     polypack,apnum)
+        keep_y,dele_y,keep_ind,dele_ind = dlc_update(
+            keep_x,keep_y,dele_x,dele_y,polypack,apnum
+        )
 
     # Draw box to delete points inside
     if event.key == 'g':
@@ -1638,7 +1754,14 @@ for i in range(Nf):
     elif psource in ['hcm','ucm']:
         phot_t = phot_data[i]['counts_1'].replace(0.0,1.0).values
     phot_c = np.sum(phot_data[i][comp_select].replace(0.0,1.0).values,axis=1)
-    lc,_,_,_ = div_lc(time_stamps,phot_t,phot_c,polypack,keep_ind,dele_ind)
+    lc,_,_,_ = div_lc(
+        time_stamps,
+        phot_t,
+        phot_c,
+        polypack,
+        keep_ind,
+        dele_ind
+    )
     pp = pp_scat(lc)
     lc_all.append(lc)
     pp_all.append(pp*1e2)
@@ -1671,7 +1794,14 @@ if grid_search:
             elif psource in ['hcm','ucm']:
                 phot_t = phot_data[j]['counts_1'].replace(0.0,1.0).values
             phot_c = np.sum(phot_data[j][all_combs[i]].replace(0.0,1.0).values,axis=1)
-            lc,_,_,_ = div_lc(time_stamps,phot_t,phot_c,polypack,keep_ind,dele_ind)
+            lc,_,_,_ = div_lc(
+                time_stamps,
+                phot_t,
+                phot_c,
+                polypack,
+                keep_ind,
+                dele_ind
+            )
             pp = pp_scat(lc)
             lc_aper.append(lc)
             pp_aper.append(pp*1e2)
@@ -1693,7 +1823,14 @@ if grid_search:
         elif psource in ['hcm','ucm']:
             phot_t = phot_data[i]['counts_1'].replace(0.0,1.0).values
         phot_c = np.sum(phot_data[i][all_combs[ind_comb_min]].replace(0.0,1.0).values,axis=1)
-        lc,_,_,_ = div_lc(time_stamps,phot_t,phot_c,polypack,keep_ind,dele_ind)
+        lc,_,_,_ = div_lc(
+            time_stamps,
+            phot_t,
+            phot_c,
+            polypack,
+            keep_ind,
+            dele_ind
+        )
         pp = pp_scat(lc)
         pp_all_grid.append(pp*1e2)
 
@@ -1733,9 +1870,9 @@ else:
 
 # Later the User will be able to decide whether to save the
 # light curve reflecting their own comparison star choices
-# or save the light curve with optimized selections
-# This flag will decide with light curve to put into
-# the save lightcurve file.
+# or save the light curve with optimized selections.
+# This flag will decide which light curve to put into
+# the saved lightcurve file.
 save_user = True
 
 ############################################
@@ -1765,22 +1902,33 @@ else:
 
 
 # Plot Light Curve from Optimal Apertured
-lcplot1, = cx_lc.plot(time_stamps[keep_ind],lc_all[ind_ppmin],ls='-',lw=0.75,c='#FFFFFF88',
-                      marker='o',ms=3.2,mew=0,mfc='w',label='User')
+lcplot1, = cx_lc.plot(
+    time_stamps[keep_ind],lc_all[ind_ppmin],
+    ls='-',lw=0.75,c='#FFFFFF88',
+    marker='o',ms=3.2,mew=0,mfc='w',label='User'
+)
 if grid_search:
-    lcplot2, = cx_lc.plot(time_stamps[keep_ind],lc_comb[ind_comb_min],
-                          ls='None',marker='.',ms=3.0,mec='r',mfc='r',
-                          mew=0.8,label='Grid')
+    lcplot2, = cx_lc.plot(
+        time_stamps[keep_ind],lc_comb[ind_comb_min],
+        ls='None',marker='.',ms=3.0,mec='r',mfc='r',
+        mew=0.8,label='Grid'
+    )
 cx_lc.legend(ncol=2,fontsize=8,loc='upper right')
 
 # Plot Periodogram of Optimal Light Curve
 freqarr,lsp = calc_lsp(time_stamps[keep_ind],lc_all[ind_ppmin])
 siglevel = 4.0*np.nanmean(lsp)*1e2
-ftplot1, = cx_ft.plot(freqarr*1e6,lsp*1e2,c='w',label='User')
+ftplot1, = cx_ft.plot(
+    freqarr*1e6,lsp*1e2,
+    c='w',label='User'
+)
 if grid_search:
     freqarr2,lsp2 = calc_lsp(time_stamps[keep_ind],lc_comb[ind_comb_min])
     siglevel2 = 4.0*np.nanmean(lsp2)*1e2
-    ftplot2, = cx_ft.plot(freqarr2*1e6,lsp2*1e2,ls='-',lw=0.8,c='r',label='Grid')
+    ftplot2, = cx_ft.plot(
+        freqarr2*1e6,lsp2*1e2,
+        ls='-',lw=0.8,c='r',label='Grid'
+    )
 
 if grid_search:
     cx_ft.axhline(siglevel,ls='-.',lw=1.0,c='w')
@@ -1812,8 +1960,10 @@ else:
     cx_ft.set_ylim(0,max_height)
     sig_text = r'4$\langle$A$\rangle$ = {:6.3f}%,  Max S/N = {:6.2f}'.format(
                siglevel,4.0*max(lsp)*1e2/siglevel)
-    cx_ft.text(0.63*cx_ft.get_xlim()[1],siglevel+0.10*cx_ft.get_ylim()[1],
-               sig_text, fontsize=9, **fontb)
+    cx_ft.text(
+        0.63*cx_ft.get_xlim()[1], siglevel+0.10*cx_ft.get_ylim()[1],
+        sig_text, fontsize=9, **fontb
+    )
     cx_ft.legend(ncol=2,fontsize=8,loc='upper right')
     
 # Plot PP-Scat versus Aperture Size
@@ -1823,16 +1973,22 @@ pplot, = cx_pp.plot(ap_sizes,pp_all,ls='-',lw=1.0,c='#FFFFFFAA',
                     marker='o',ms=4,mec='w',mfc='w',label=pp_label)
 if grid_search:
     ppgrid_label = "Grid, Comps {}, Min. P2P = {:.3f} %".format(comp_str2,min(pp_all_grid))
-    pplot_grid, = cx_pp.plot(ap_sizes,pp_all_grid,ls='--',lw=0.75,c='r',
-                             marker='o',ms=5,mec='r',mfc='None',label=ppgrid_label)
+    pplot_grid, = cx_pp.plot(
+        ap_sizes,pp_all_grid,ls='--',lw=0.75,c='r',
+        marker='o',ms=5,mec='r',mfc='None',label=ppgrid_label
+    )
 cx_pp.xaxis.set_major_locator(pp_majloc)
 
 # Print a special marker for the minimum scatter aperture
-cx_pp.plot(ap_sizes[ind_ppmin],pp_all[ind_ppmin],ls='None',
-           marker='s',ms=9,mec='c',mfc='None',mew=1.5)
+cx_pp.plot(
+    ap_sizes[ind_ppmin],pp_all[ind_ppmin],ls='None',
+    marker='s',ms=9,mec='c',mfc='None',mew=1.5
+)
 if grid_search:
-    cx_pp.plot(ap_sizes[ind_ppmin_grid],pp_all_grid[ind_ppmin_grid],ls='None',
-               marker='o',ms=9,mec='C1',mfc='None',mew=1.5)
+    cx_pp.plot(
+        ap_sizes[ind_ppmin_grid],pp_all_grid[ind_ppmin_grid],ls='None',
+        marker='o',ms=9,mec='C1',mfc='None',mew=1.5
+    )
 cx_pp.legend(ncol=1,fontsize=8,loc='upper right')
 
 
