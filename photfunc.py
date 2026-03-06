@@ -26,7 +26,7 @@ version_history.txt file.
 
 
 #############################################################
-##  Progress Bar Code. Midified from Stack Overflow,
+##  Progress Bar Code. Modified from Stack Overflow,
 ##  "Python to print out status bar and percentage"
 
 ## Provide the interation counter (count=int)
@@ -91,9 +91,14 @@ def get_time(fname,tdict):
         t_exp = float(hdr[tdict['texp']]) # Must be in seconds
 
         # Convert to ISOT format for Astropy Time
-        isot_time = "{}-{}-{}T{}:{}:{}".format(date_obs[0:4],date_obs[5:7],
-                                               date_obs[8:],time_obs[0:2],
-                                               time_obs[3:5],time_obs[6:])
+        isot_time = "{}-{}-{}T{}:{}:{}".format(
+            date_obs[0:4],
+            date_obs[5:7],
+            date_obs[8:],
+            time_obs[0:2],
+            time_obs[3:5],
+            time_obs[6:]
+        )
         time = Time(isot_time,scale='utc',format='isot')
         
     elif (dformat == 1) & (tformat == 1):
@@ -254,7 +259,7 @@ def get_loc(hdr,telcode):
                 lat=47.9180556*u.deg,
                 height=944*u.m
             )
-    elif telcode == 'krak50' or telescope == 'cdk500':
+    elif telcode == 'krak50' or telcode == 'cdk500':
         loc = EarthLocation.from_geodetic(
                 lon=20.0675000*u.deg,
                 lat=49.5691667*u.deg,
@@ -391,8 +396,16 @@ def div_lc(time,target,comps,polyinfo,indk,indd):
     poly_sigupp = polyinfo[3]
     
     # Generate a polynmial fit
-    modelk,modeld = poly_sigfit(time,dlc_raw,mean_targ,indk,indd,
-                                poly_order,poly_nrej,poly_siglow,poly_sigupp)
+    modelk,modeld = poly_sigfit(
+        time,
+        dlc_raw,
+        mean_targ,
+        indk,indd,
+        poly_order,
+        poly_nrej,
+        poly_siglow,
+        poly_sigupp
+    )
 
     # Generate arrays to return
     dlc_mz_keep = dlc_raw[indk]/modelk - 1.0  # Mean-Zero'd DLC (Kept)
@@ -482,7 +495,6 @@ def reconfig():
             old_values.append(line.strip("\n"))
     print('')
 
-
     # Let's change it up
     queries = ['author            = ',
                'image_list_name   = ',
@@ -512,9 +524,6 @@ def reconfig():
 
     print('')
     return
-
-
-
 
 
 
