@@ -35,7 +35,7 @@ ITYPE_FVECTOR   = 18
 # ucm magic number
 MAGIC           = 47561009
 
-def check_ucm(fobj):
+def check_ucm(fobj, fname=None):
     """
     Check a file opened for reading in binary mode to see if it is a ucm.
     Returns endian which is a string to be passed
@@ -86,7 +86,7 @@ def read_ucm(fname, flt=True):
         # the name of a file.
         if not fname.endswith('.ucm'): fname += '.ucm'
         uf = open(fname, 'rb')
-        start_format = check_ucm(uf)
+        start_format = check_ucm(uf, fname=fname)
 
         # read the header
         lmap = struct.unpack(start_format + 'i', uf.read(4))[0]
