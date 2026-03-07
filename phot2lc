@@ -147,7 +147,7 @@ source_dict = {
 
 # Define a Z-scale normalization object
 ZS = ZScaleInterval(
-    nsamples=10000, 
+    n_samples=10000, 
     contrast=0.15, 
     max_reject=0.5, 
     min_npixels=5, 
