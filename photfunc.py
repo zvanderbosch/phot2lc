@@ -496,15 +496,18 @@ def reconfig():
     print('')
 
     # Let's change it up
-    queries = ['author            = ',
-               'image_list_name   = ',
-               'pixloc_name       = ',
-               'photbase_name     = ',
-               'stardat_location  = ',
-               'default_telescope = ',
-               'default_source    = ',
-               'default_image     = ',
-               'default_object    = ']
+    queries = [
+        'author            = ',
+        'image_list_name   = ',
+        'pixloc_name       = ',
+        'photbase_name     = ',
+        'stardat_location  = ',
+        'default_telescope = ',
+        'default_source    = ',
+        'default_image     = ',
+        'default_object    = ',
+        'default_filter    = '
+    ]
     output = []
     for i,q in enumerate(queries):
         new_item = change_val(q,old_values[i].split("=")[-1].strip())
