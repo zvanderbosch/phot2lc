@@ -337,10 +337,17 @@ ap_sizes = sorted(ap_sizes_raw)
 phot_names = [f for _,f in sorted(zip(ap_sizes_raw,phot_names_raw))]
 
 
-# Load in the Photometry for each aperture size
+# Load in the photometry data
 if psource in ['hsp','mae']:
-    phot_data = [pd.read_csv(f,header=None,sep='\\s+').iloc[:,1:].astype('float64') 
-                 for f in phot_names]
+
+    # Load data, replacing NaN/Inf values with zeroes
+    phot_data = []
+    for f in phot_names:
+        df = pd.read_csv(f,header=None,sep='\\s+').iloc[:,1:].astype('float64')
+        df.replace([np.inf, -np.inf], np.nan, inplace=True)
+        df.fillna(0.0, inplace=True)
+        phot_data.append(df)
+        
 elif psource == 'hcm':
 
     # Get column names and rows to skip
