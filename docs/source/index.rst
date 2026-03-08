@@ -45,6 +45,7 @@ Package Contents
 * **photconfig** -- Configures some of phot2lc's defaults
 * **weldlc** -- Welds together multiple light curve files into one
 * **quicklook** -- Generates quicklook plots of light curves and their periodograms
+* **addstar** -- Convenience function for adding new stars to the *stars.dat* file
 
 
 Guide
