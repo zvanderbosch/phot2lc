@@ -27,10 +27,15 @@ The phot2lc project can also be found at `GitHub <https://github.com/zvanderbosc
 Requirements
 ============
 
-* Python >= 3.6
-* Matplotlib >= 3.1.3
-* Astropy >= 4.0
-* LMFIT >= 1.0.1
+* python >= 3.11
+* numpy >= 2.4
+* scipy >= 1.17
+* pandas >= 3.0
+* matplotlib >= 3.10
+* PyQt5 >= 5.15
+* astropy >= 7.2
+* photutils >= 2.3
+* lmfit >= 1.3
 
 
 Package Contents
