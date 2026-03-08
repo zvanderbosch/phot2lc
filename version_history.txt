@@ -584,3 +584,34 @@ Version 1.8.0 (2024 July 31)
 Version 1.8.1 (2024 July 31)
 ----------------------------
 > Minor bug fixes.
+
+
+Version 1.9.0 (2026 March 7)
+----------------------------
+> Many new telescopes/sites added with contributions from 
+  Kaylee Grace and Zach Savery of Dartmouth University.
+> Bug fixed (Issue #5, PR #8) where NaN/Inf values in Maestro
+  input files was producing all-NaN divided light curves,
+  resulting in undefined y-axis limits for the divided light
+  curve window. phot2lc now performs better filtering on both
+  Maestro and CCD-HSP input photometry to replace any NaN
+  or Inf values with zeroes.
+> Bug fixed (Issue #2, PR #6) where light curves extracted from
+  HiPERCAM photometry had flux error columns full of NaNs when
+  only one comparison star was being used. Error stemmed from
+  the cal_err_function where the phot array was being improperly
+  indexed and excluding the single comparison star's flux.
+> Added a new command line argument (-f, --filter) for phot2lc 
+  (see PR #7) that allows users to specify a filter name that 
+  overrides what might be found in the FITS headers. This can 
+  be useful when the FITS header doesn't contain any filter 
+  information, but users still want the filter name to be 
+  included in the phot2lc output files (e.g. .lc and .phot files).
+> Some minor code cleanup and syntax reformatting.
+
+
+Version 1.9.1 (2026 March 8)
+----------------------------
+> Version history updated for both this version and 1.9.0.
+> Some minor code cleanup and syntax reformatting.
+> Documentation updates.
