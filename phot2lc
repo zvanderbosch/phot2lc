@@ -231,9 +231,14 @@ valid_sources = list(source_dict.keys())
 
 # Print out available codes if requested
 if args.codes:
+
+    # Get indices for alphabetically sorted telescope codes
+    sorted_code_indices = np.argsort(valid_codes)
+
+    # Print out supported telescopes in alphabetical order
     print('\nSupported telescope codes:')
-    for code,tele,inst in zip(valid_codes,valid_telescopes,valid_instruments):
-        print("   {} = {} {}".format(code,tele,inst))
+    for idx in sorted_code_indices:
+        print(f"   {valid_codes[idx]:6s} = {valid_telescopes[idx]} {valid_instruments[idx]}")
     print("")
     sys.exit(1)
 
