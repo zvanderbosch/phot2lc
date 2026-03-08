@@ -27,7 +27,12 @@ Documentation for **phot2lc** can be found at [phot2lc.readthedocs.io](https://p
 * Barycentric time corrections
 
 ### Requirements:
-* Python 3.6 (or later)
-* matplotlib 3.1.3 (or later)
-* Astropy 4.0 (or later)
-* LMFIT 1.0.1
+* python >= 3.11
+* numpy >= 2.4
+* scipy >= 1.17
+* pandas >= 3.0
+* matplotlib >= 3.10
+* PyQt5 >= 5.15
+* astropy >= 7.2
+* photutils >= 2.3
+* lmfit >= 1.3
