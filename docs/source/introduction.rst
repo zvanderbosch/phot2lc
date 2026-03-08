@@ -32,20 +32,21 @@ Currently Supported Telescopes
 
 The following telescopes/instruments are currently supported, and their phot2lc telescope codes shown on the left:
 
-.. code-block:: none
-   adu60  = ADU60 at Adiyaman Observatory, Turkey Andor CCD/EMCCD (SDK2)
+.. code-block:: bash
+
+   adu60  = ADU60 at Adiyaman Observatory, Turkey Andor CCD/EMCCD, SDK2
    amag   = Amagi Observatory E-4240bi
    ap05   = ARCSAT 0.5m at Apache Point dcam-spare
-   bake   = Baker Observatory 20 inch, CDK20 Apogee USB/Net
+   bake   = Baker Observatory 20-inch, CDK20 Apogee USB/Net
    bnt    = Xinglong 0.85m telescope, BNT Andor Tech
    cdk500 = CDK500 at Krakow Apogee USB/Net
    coud   = McDonald 2.7m Coude Guide
    dot    = 3.5m DOT at ARIES TIRCAM2
    hao    = HAO68 at Horten Observatory, Norway Moravian Instruments, G2-1600 MkII
    kped   = KPED 2.1m KPED
-   krak50 = Krakow 50 cm QHY-600M
+   krak50 = Krakow 50-cm QHY-600M
    lco1   = LCOGT 1.0m Sinistro
-   luli   = Lulin 1m, LOT Andor CCD/EMCCD (SDK2)
+   luli   = Lulin 1m, LOT Andor CCD/EMCCD, SDK2
    mcd2   = McDonald 2.1m ProEM
    oanspm = OAN-SPM 1.5m CAMILA
    opd    = OPD 1.6m Cam1+Ixon
@@ -59,11 +60,11 @@ The following telescopes/instruments are currently supported, and their phot2lc 
    sakp   = SARA KP Arc Camera
    sakt   = SARA KP Arc Camera
    sarm   = SARA RM SARA-RM Andor Ikon-L
-   stew   = 61 inch Mt. Bigelow mont4k
+   stew   = 61-inch Mt. Bigelow mont4k
    suho   = Mt. Suhora Obs. Small Dome SBIG ST-10 Dual CCD Camera
    tnt    = Xinglong 0.8m telescope, TNT CCD
-   tshao  = Zeiss-1000 (1m) at Tian Shan Astronomical Observatory FLI
-   tueb   = Tuebingen Observatory 0.8m SBIG STL-1001 3 CCD Camera
+   tshao  = Zeiss-1000 1m at Tian Shan Astronomical Observatory FLI
+   tueb   = Tuebingen Observatory 0.8m SBIG STL-1001 3-CCD Camera
    tymce  = Remote 14inch run by Krakow Observatory, by Ukraine border ASI Camera
    uh88   = STACam on the UH88 STACam
    unca   = Lookout Observatory 14inch, UNCA ASCOM Camera
