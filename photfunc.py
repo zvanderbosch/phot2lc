@@ -8,7 +8,6 @@ from astropy.time import Time
 from astropy.coordinates import EarthLocation
 from astropy.timeseries import LombScargle as ls
 import astropy.units as u
-import lmfit as lmf
 from lmfit import Model
 
 
