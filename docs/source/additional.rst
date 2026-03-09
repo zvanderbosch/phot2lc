@@ -3,8 +3,28 @@ Additional Tools
 
 Besides the main light curve extraction program (phot2lc) and the configuration program (photconfig), the phot2lc package also comes with a program for welding individual light curve files together (weldlc), and a program for generating light curve + periodogram plots using the .lc output files. This section provides information on how to use these tools.
 
+* `addstar`_
 * `weldlc`_
 * `quicklook`_
+
+addstar
+-------
+
+A convenience function for adding new stars into the **stars.dat** file. This function has three required input arguments:
+
+.. code-block:: text
+
+  objectName    Name of object to add into stars.dat.
+  ra            Object Right Ascension in decimal degrees or HMS sexagesimal formats.
+  dec           Object Declination in decimal degrees or DMS sexagesimal formats.
+
+Example usages with decimal degree versus HMSDMS sexagesimal coordinates:
+
+.. code-block:: bash
+
+  addstar WDJ1944+4557  296.1330000  45.9647583
+  addstar WDJ1944+4557  "19 44 31.92"  "+45 57 53.13"
+
 
 weldlc
 ------
@@ -17,7 +37,7 @@ A program designed for combining individual phot2lc light curve (.lc) files into
   -b --bypass      Bypass the barycentric correction check and weld LC's anyways.
   -o --outfile     Output filename.
 
-wildlc will check the *barycorr* entries within each .lc file to make sure every light curve being welded has had barycentric time corrections applied. If one or more of the .lc files has barycorr = False, wildly will throw an error. If you know that your light curves are not all barycentric corrected and want to weld anyways, you can use the --bypass (-b) command to skip the check. An example usage would look like:
+weldlc will check the *barycorr* entries within each .lc file to make sure every light curve being welded has had barycentric time corrections applied. If one or more of the .lc files has barycorr = False, wildly will throw an error. If you know that your light curves are not all barycentric corrected and want to weld anyways, you can use the --bypass (-b) command to skip the check. An example usage would look like:
 
 .. code-block:: bash
 
