@@ -4,7 +4,7 @@
 
 [![PyPI](https://img.shields.io/pypi/v/phot2lc.svg)](https://pypi.org/project/phot2lc/)
 [![Docs](https://readthedocs.org/projects/phot2lc/badge/?version=latest)](https://phot2lc.readthedocs.io/en/latest/?badge=latest)
-[![DOI](https://zenodo.org/badge/271863975.svg)](https://zenodo.org/badge/latestdoi/271863975)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6459211.svg)](https://doi.org/10.5281/zenodo.6459211)
 
 
 Much of the inspiration for this program came from the [WQED light curve extraction software](https://ui.adsabs.harvard.edu/abs/2013ascl.soft04004T/abstract), but **phot2lc** includes several new features and the ease of installation that comes with pure-Python programs.
