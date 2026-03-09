@@ -25,26 +25,28 @@ at which a point you will be lead through a series of prompts to edit the config
 * **default_source**
 * **default_image**
 * **default_object**
+* **default_filter**
 
-After initially installing phot2lc, the default values for these parameters should be as follows:
+After initially installing phot2lc, the default values for these parameters should be as follows, which correspond to a setup where data were acquired with the Palomar 200-in CHIMERA instrument and reduced using the HiPERCAM pipeline:
 
 .. code-block:: bash
 
-   author            = Zach Vanderbosch
-   image_list_name   = olist
-   pixloc_name       = phot_coords.orig
+   author            = sys-user
+   image_list_name   = hcm.list
+   pixloc_name       = aperture.ape
    photbase_name     = runbase
-   stardat_location  = /home/zachvanderbosch/data/stars.dat
-   default_telescope = mcd2
-   default_source    = hsp
+   stardat_location  = /home/user/data/stars.dat
+   default_telescope = p200
+   default_source    = hcm
    default_image     = None
    default_object    = None
+   default_filter    = None
 
 
 
 Below are detailed descriptions for each parameter's meaning and use:
 
-* **author**: phot2lc User name (e.g. your name).
+* **author**: phot2lc User name (e.g. your name). *sys-user* is a special value that tells phot2lc to use your system username as the author name.
 
 * **image_list_name**: Name of the file which contains the list of image filenames corresponding to each photometric data point. The images are used for a few purposes, such as grabbing some key header information, and using the first filename in the list to display an image for target and comparison star identification. Depending on which photometry pipeline was used, the image headers may also be used to generate time stamps for each data point in the light curve.
   
@@ -77,6 +79,10 @@ Below are detailed descriptions for each parameter's meaning and use:
 * **default_object**: Default object name. 
 
     * A useful parameter to set if you intend to reduce a lot of light curves at once for a single object whose name cannot be obtained directly from the image header. This object name needs to correspond to an object name within your stars.dat file, since this is how the object's coordinates are acquired for barycentric time corrections. If unused, set to **None**. This default setting can be overridden with the **phot2lc** command line option -o (\\-\\-object).
+
+* **default_filter**: Defulat filter name.
+
+    * A useful parameter to set if reducing a lot light curves from a single instrument where the filter name cannot be obtained from the image header. If unused, set to **None**. This default setting can be overridden with the **phot2lc** command line option -f (\\-\\-filter).
 
 
 The stars.dat File
