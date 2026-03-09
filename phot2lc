@@ -20,19 +20,30 @@ version_history.txt file.
 Usage:
     phot2lc
     phot2lc -h|--help
+    phot2lc -c|--codes
+    phot2lc -b|--barycorr
+    phot2lc -n|--nolog
+    phot2lc -a|--author
     phot2lc -t|--telescope
     phot2lc -s|--source
+    phot2lc -p|--photname
     phot2lc -i|--image
     phot2lc -o|--object
+    phot2lc -f|--filter
 
 Options:
-    -h --help      Show command line options
-    -c --codes     Print a list of available telescope codes
-    -t --telescope Code name for telescope used
-    -s --source    Code name for photometry program used
-    -i --image     Name of specific image instead of list
-    -o --object    Name of object matching stars.dat entry
-    -f --filter    Name of filter used for observations
+
+    -c --codes      Print list of available telescope codes
+    -b --barycorr   If used, skip barycentric corrections
+    -n --nolog      If used, ignore existing phot2lc_log file
+    -a --author     Name of phot2lc user
+    -t --telescope  Code name for telescope used
+    -s --source     Code name for photometry pipeline used
+    -p --photname   Base filename for photometry input files
+    -i --image      Name of specific image instead of an image list
+    -o --object     Name of object matching stars.dat entry
+    -f --filter     Name of filter used for observations
+)
 
 """ 
 
@@ -177,35 +188,7 @@ else:
 parser = argparse.ArgumentParser()
 parser.add_argument(
     '-c', '--codes',action='store_true',
-    help="If invoked, print list of available telescope codes."
-)
-parser.add_argument(
-    '-a', '--author',type=str,default=default_author,
-    help="Name of phot2lc user."
-)
-parser.add_argument(
-    '-t', '--telescope',type=str,default=default_telescope,
-    help="Code name for telescope used."
-)
-parser.add_argument(
-    '-s', '--source',type=str,default=default_source,
-    help="Source of photometry (ccd_hsp or maestro)"
-)
-parser.add_argument(
-    '-p', '--photname',type=str,default=phot_basename,
-    help="Base filename for photometry output files."
-)
-parser.add_argument(
-    '-i', '--image',type=str,default=default_image,
-    help="Whether to use a list of images, or just one."
-)
-parser.add_argument(
-    '-o', '--object',type=str,default=default_object,
-    help="Name of object. If None, get object from FITS header."
-)
-parser.add_argument(
-    '-f', '--filter',type=str,default=default_filter,
-    help="Name of filter. If None, get filter from FITS header."
+    help="If invoked, print alphabetical list of available telescope codes."
 )
 parser.add_argument(
     '-b', '--barycorr',action='store_false',
@@ -213,7 +196,35 @@ parser.add_argument(
 )
 parser.add_argument(
     '-n', '--nolog',action='store_true',
-    help="If invoked, the phot2lc_log file is not used during startup."
+    help="If invoked, ignore any existing phot2lc_log file during startup."
+)
+parser.add_argument(
+    '-a', '--author',type=str,default=default_author,
+    help="Name of phot2lc user. Overrides 'author' value in config.dat."
+)
+parser.add_argument(
+    '-t', '--telescope',type=str,default=default_telescope,
+    help="Code name for telescope used. Overrides 'default_telescope' value in config.dat."
+)
+parser.add_argument(
+    '-s', '--source',type=str,default=default_source,
+    help="Codename for photometry pipeline used. Overrides 'default_source' value in config.dat."
+)
+parser.add_argument(
+    '-p', '--photname',type=str,default=phot_basename,
+    help="Base filename for photometry input files. Overrides 'photbase_name' value in config.dat."
+)
+parser.add_argument(
+    '-i', '--image',type=str,default=default_image,
+    help="Whether to use a list of images, or just one. Overrides 'default_image' value in config.dat."
+)
+parser.add_argument(
+    '-o', '--object',type=str,default=default_object,
+    help="Name of object. If None, get object from FITS header. Overrides 'default_object' value in config.dat."
+)
+parser.add_argument(
+    '-f', '--filter',type=str,default=default_filter,
+    help="Name of filter. If None, get filter from FITS header. Overrides 'default_filter' value in config.dat."
 )
 args = parser.parse_args()
 
