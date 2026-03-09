@@ -23,7 +23,7 @@ phot2lc also has several command line arguments available:
 
 .. code-block:: text
 
-  -h --help      Show command line options
+  -h --help       Show command line options
   -c --codes      Print list of available telescope codes
   -b --barycorr   If used, skip barycentric corrections
   -n --nolog      If used, ignore existing phot2lc_log file
