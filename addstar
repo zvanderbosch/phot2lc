@@ -60,6 +60,10 @@ except:
         print('Could not produce SkyCoord object from provided coordinates:')
         print(f'  RA = {ra}')
         print(f' Dec = {dec}')
+        print('Make sure provided coordinates are in decimal degree or HMSDMS sexagesimal formats:')
+        print('Example Usages:')
+        print('   addstar  ObjectName  0.000  0.000')
+        print('   addstar  ObjectName  "00 00 00.0"  "00 00 00.0"')
         exit(1)
     
 
@@ -74,7 +78,7 @@ star_dat_file = config_dat[4]
 star_dat = pd.read_csv(
     star_dat_file,
     header=None,
-    delim_whitespace=True,
+    sep='\s+',
     dtype=str
 )
 
