@@ -14,7 +14,7 @@ When you first install phot2lc, you will need to change some of the default sett
 
    photconfig
 
-at which a point you will be lead through a series of prompts to edit the configuration file "config.dat." The parameters that need to be set are:
+at which a point you will be lead through a series of prompts to edit the configuration file "config.dat." The parameters that get set are:
 
 * **author**
 * **image_list_name**

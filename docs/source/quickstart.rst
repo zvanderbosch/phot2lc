@@ -24,16 +24,18 @@ phot2lc also has several command line arguments available:
 .. code-block:: text
 
   -h --help      Show command line options
-  -c --codes     Print a list of available telescope codes
-  -t --telescope Code name for telescope used
-  -s --source    Code name for photometry program used
-  -p --photname  Base filename for photometry output files
-  -i --image     Name of specific image instead of list
-  -o --object    Name of object matching stars.dat entry
-  -f --filter    Name of filter used for observations
-  -b --barycorr  If invoked, do NOT perform barycentric corrections
+  -c --codes      Print list of available telescope codes
+  -b --barycorr   If used, skip barycentric corrections
+  -n --nolog      If used, ignore existing phot2lc_log file
+  -a --author     Name of phot2lc user
+  -t --telescope  Code name for telescope used
+  -s --source     Code name for photometry pipeline used
+  -p --photname   Base filename for photometry input files
+  -i --image      Name of specific image instead of an image list
+  -o --object     Name of object matching stars.dat entry
+  -f --filter     Name of filter used for observations
 
-If these command line arguments are used, they will *override the defaults* that are set within the config.dat file by the photconfig program.
+When the ``--author``, ``--telescope``, ``--source``, ``--photname``, ``--image``, ``--object``, or ``--filter`` options are used, they will *override the defaults* that are set within the config.dat file by the photconfig program.
 
 
 Input Files
