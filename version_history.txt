@@ -610,8 +610,14 @@ Version 1.9.0 (2026 March 7)
 > Some minor code cleanup and syntax reformatting.
 
 
-Version 1.9.1 (2026 March 8)
+Version 1.9.1 (2026 March 9)
 ----------------------------
 > Version history updated for both this version and 1.9.0.
 > Some minor code cleanup and syntax reformatting.
 > Documentation updates.
+> Added new phot2lc command line argument (-n, --nolog) that
+  allows users to startup phot2lc without using any existing
+  phot2lc_log file. This allows users to start the light curve
+  extraction process for an object from scratch without having 
+  to manually delete the phot2lc_log file prior to running 
+  phot2lc.

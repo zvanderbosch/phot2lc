@@ -137,6 +137,9 @@ default_filter = None if config_dat[9] == 'None' else config_dat[9]
 #############################################################
 ## Define some additional global params
 
+# Define name of log file
+log_file = "phot2lc_log.txt"
+
 # Currently supported photometry pipeline sources
 source_dict = {
     'hsp':'ccd_hsp',
@@ -207,6 +210,10 @@ parser.add_argument(
 parser.add_argument(
     '-b', '--barycorr',action='store_false',
     help="If invoked, do NOT perform barycentric corrections."
+)
+parser.add_argument(
+    '-n', '--nolog',action='store_true',
+    help="If invoked, the phot2lc_log file is not used during startup."
 )
 args = parser.parse_args()
 
@@ -434,15 +441,16 @@ Ndat = len(phot_data[0])
 
 # If Phot2lc has been run previously, load in the Log File
 log_exists = False
-if os.path.exists('phot2lc_log.txt'):
-    log_header = pd.read_csv(
-        'phot2lc_log.txt',
-        header=None,
-        nrows=5,
-        delimiter='?'
-    ).values
-    log_data = np.loadtxt('phot2lc_log.txt')
-    log_exists = True
+if os.path.exists(log_file):
+    if not args.nolog:
+        log_header = pd.read_csv(
+            log_file,
+            header=None,
+            nrows=5,
+            delimiter='?'
+        ).values
+        log_data = np.loadtxt(log_file)
+        log_exists = True
 
 
 #############################################################
@@ -2423,12 +2431,9 @@ log_format = '%10.3f  %i'
 # Save the lightcurve + header info to file
 lcphot_fname = '{}_{}.phot'.format(obj_name,print_date.replace("-","")).lower()
 lcfin_fname = '{}_{}.lc'.format(obj_name,print_date.replace("-","")).lower()
-lclog_fname = 'phot2lc_log.txt'
 np.savetxt(lcphot_fname, output_phot, fmt=rawphot_format, header=rawphot_header)
 np.savetxt(lcfin_fname, output_lc, fmt=lcfin_format, header=lcfin_header)
-np.savetxt(lclog_fname, output_log, fmt=log_format, header=log_header)
+np.savetxt(log_file, output_log, fmt=log_format, header=log_header)
 
 print("\nLightcurve saved to file {}".format(lcfin_fname))
 print("\nFinished! \n")
-
-
