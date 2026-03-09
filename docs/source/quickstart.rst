@@ -30,6 +30,7 @@ phot2lc also has several command line arguments available:
   -p --photname  Base filename for photometry output files
   -i --image     Name of specific image instead of list
   -o --object    Name of object matching stars.dat entry
+  -f --filter    Name of filter used for observations
   -b --barycorr  If invoked, do NOT perform barycentric corrections
 
 If these command line arguments are used, they will *override the defaults* that are set within the config.dat file by the photconfig program.
@@ -163,38 +164,39 @@ The .lc file consists of a header followed by three columns of data. The header 
 
 .. code-block:: text
 
-  # Object     = G117-B15A                     # Name of Object
-  # RA         = 09 24 15.27                   # Object Right Ascension
-  # Dec        = +35 16 51.3                   # Object Declination
+  # Object     = WDJ1944+4557                  # Name of Object
+  # RA         = 19 44 31.92                   # Object Right Ascension
+  # Dec        = +45 57 53.13                  # Object Declination
   # Telescope  = McDonald 2.1m                 # Name of Telescope
   # Instrument = ProEM                         # Name of Instrument
   # TeleCode   = mcd2                          # Teledat Code Name
-  # Date       = 2018-01-26                    # Mid-Exposure UTC Date at T0
-  # Time       = 05:06:01.500                  # Mid-Exposure UTC Time at T0
-  # MJD        = 58144.212517361               # Mid-Exposure UTC MJD at T0
+  # Observer   = MLK                           # Name of Observer
+  # Date       = 2023-09-22                    # Mid-Exposure UTC Date at T0
+  # Time       = 01:43:44.000                  # Mid-Exposure UTC Time at T0
+  # MJD        = 60209.072037037               # Mid-Exposure UTC MJD at T0
   # Exptime    = 15.000000                     # Exposure Time (s)
   # Filter     = BG40                          # Filter Name
-  # BJED       = 2458144.718681479             # Mid Exp. Barycentric Julian Date
+  # BJED       = 2460209.574646168             # Mid Exposure BJD-TDB at T0
   # Barycorr   = True                          # Barycentric Corrections Applied?
-  # ApPhot     = ccd_hsp                       # Photometry Program
-  # OrigFile   = runbase6.                     # Source Photometry Filename
-  # ApRadius   = 6.00                          # Aperture Radius (pixels)
-  # AvgScatter = 1.25                          # Avg. Point-to-Point Scatter (%)
-  # Comps      = 2                             # Comparison stars used
-  # PolyOrder  = 3                             # Degree of Polynomial Division
-  # Nkeep      = 1049                          # Number of points in light curve 
-  # Ndelete    = 0                             # Number of points removed
-  # Author     = Zach Vanderbosch              # Author of this light curve
-  # CreatedOn  = 2021-02-10 08:57:51.459       # Date created
-  # Columns: Time (s), Relative Flux, Relative Flux Error
-          0.000  -0.031284   0.002743
-         15.000  -0.030957   0.002611
-         30.000  -0.029607   0.002626
+  # ApPhot     = hipercam                      # Photometry Program
+  # OrigFile   = output.log                    # Source Photometry Filename
+  # ApRadius   = -1.00                         # Aperture Radius (pixels)
+  # AvgScatter = 4.44                          # Avg. Point-to-Point Scatter (%)
+  # NComps     = 6                             # Number of Comparison stars used
+  # CompIDs    = 1,2,3,4,5,6                   # IDs of Comparison stars used
+  # PolyOrder  = 1                             # Degree of Polynomial Division
+  # Nkeep      = 676                           # Number of points in light curve 
+  # Ndelete    = 6                             # Number of points removed
+  # Author     = zvanderbosch                  # Author of this light curve
+  # CreatedOn  = 2025-02-26 22:38:03.807       # Date created
+  # Columns: Time since T0 (s), Relative Flux, Relative Flux Error
+         0.000   0.016758   0.029044
+        15.000   0.057503   0.029744
+        29.999   0.013757   0.028536
          ...        ...        ...     
-      15690.173  -0.011376   0.002271
-      15705.173  -0.029081   0.002532
-      15720.174  -0.024124   0.002615
-
+     10244.711   0.036098   0.066617
+     10259.711   0.013456   0.071603
+     10274.710  -0.124630   0.201708
 
 The .phot File
 ~~~~~~~~~~~~~~
@@ -207,32 +209,33 @@ Below is an example .phot file, again showing the header followed by the first a
 
 .. code-block:: text
 
-  # Object     = G117-B15A                     # Name of Object
-  # RA         = 09 24 15.27                   # Object Right Ascension
-  # Dec        = +35 16 51.3                   # Object Declination
+  # Object     = WDJ1944+4557                  # Name of Object
+  # RA         = 19 44 31.92                   # Object Right Ascension
+  # Dec        = +45 57 53.13                  # Object Declination
   # Telescope  = McDonald 2.1m                 # Name of Telescope
   # Instrument = ProEM                         # Name of Instrument
   # TeleCode   = mcd2                          # Teledat Code Name
-  # Date       = 2018-01-26                    # Mid-Exp. UTC Start Date
-  # Time       = 05:06:01.500                  # Mid-Exp. UTC Start Time
-  # MJD        = 58144.212517361               # Mid Exposure UTC MJD Start
+  # Observer   = MLK                           # Name of Observer
+  # Date       = 2023-09-22                    # Mid-Exposure UTC Date at T0
+  # Time       = 01:43:44.000                  # Mid-Exposure UTC Time at T0
+  # MJD        = 60209.072037037               # Mid-Exposure UTC MJD at T0
   # Exptime    = 15.000000                     # Exposure Time (s)
   # Filter     = BG40                          # Filter Name
-  # BJED       = 2458144.718681479             # Mid Exp. Barycentric Julian Date
+  # BJED       = 2460209.574646168             # Mid Exposure BJD-TDB at T0
   # Barycorr   = True                          # Barycentric Corrections Applied?
-  # ApPhot     = ccd_hsp                       # Photometry Program
-  # OrigFile   = runbase6.                     # Source Photometry Filename
-  # ApRadius   = 6.00                          # Aperture Radius (pixels)
-  # Nkeep      = 1049                          # Number of points in light curve 
-  # Ndelete    = 0                             # Number of points removed
-  # Columns: Time (s), Target, Comparisons, Sky
-         0.000     192620    88577    25195    78351
-   	    15.000     206569    94587    27371    76162
-        30.000     204690    92457    28212    75914
-        ...         ...       ...      ...      ...
-     15690.173     214079    93761    27382    13946
-     15705.173     175979    78464    22928    14297
-     15720.174     166926    73647    22034    15337
+  # ApPhot     = hipercam                      # Photometry Program
+  # OrigFile   = output.log                    # Source Photometry Filename
+  # ApRadius   = -1.00                         # Aperture Radius (pixels)
+  # Nkeep      = 676                           # Number of points in light curve 
+  # Ndelete    = 6                             # Number of points removed
+  # Columns: Time since T0 (s), Target, Comparisons, Sky
+         0.000       3457    29034    42996    25397    43921     6648     7415   405258
+        15.000       3640    29160    43144    25986    44821     6575     7652   381606
+        29.999       3437    29067    42429    25528    44015     6644     7267   370744
+         ...          ...      ...      ...      ...      ...      ...      ...      ...
+     10244.711       1922    15753    24038    14141    24874     3581     4083   645313
+     10259.711       1938    16427    24674    14755    25188     3820     4245   554616
+     10274.710        533     5160     8030     4692     7983     1207     1318   550579
 
 The phot2lc_log File
 ~~~~~~~~~~~~~~~~~~~~
@@ -245,16 +248,16 @@ An example *phot2lc_log* file is shown below, which shows the header and the fir
 
 .. code-block:: text
 
-  #     OBJECT = G117-B15A
-  # POLYNOMIAL = 3,0,3.00,3.00
-  #      DTMID = 2018-01-26T05:06:01.500
-  #      COMPS = 1+2
+  #     OBJECT = WDJ1944+4557
+  # POLYNOMIAL = 1,5,2.00,100.00
+  #      DTMID = 2023-09-22T01:43:44.000
+  #      COMPS = 1+2+3+4+5+6
   #       TEXP = 15.000000
        0.000  1
       15.000  1
       30.000  1
-      ...    ...
-   15690.000  1
-   15705.000  1
-   15720.000  1
+       ...   ...
+   10260.000  1
+   10275.000  1
+   10290.000  0
 
